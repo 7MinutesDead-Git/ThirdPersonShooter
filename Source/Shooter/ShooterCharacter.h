@@ -29,15 +29,27 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
+	// ----------------------------------
+	// Control.
 	void MoveFoward(float AxisValue);
 	void MoveRight(float AxisValue);
 	void LookUpRate(float AxisValue);
 	void LookRightRate(float AxisValue);
-	void SwapShoulder();
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="View")
 	float RotationRate = 100;
 
+	// ----------------------------------
+	// Camera.
 	UPROPERTY()
 	USpringArmComponent* CameraSpringArm;
+
+	void SwapShoulder();
+	void MoveToShoulder(float DeltaTime);
+
+	bool bRightShoulder = true;
+	float RightShoulderOffset;
+	float LeftShoulderOffset;
+	UPROPERTY(EditAnywhere, Category="View")
+	float ShoulderSwapSpeed = 10;
 };

@@ -18,8 +18,12 @@ void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CameraSpringArm = GetComponentByClass(USpringArmComponent::StaticClass());
-
+	// Get reference to the spring arm so we can shoulder swap.
+	CameraSpringArm = Cast<USpringArmComponent>(GetComponentByClass(USpringArmComponent::StaticClass()));
+	// As long as the spring arm in the BP is centered around the player,
+	// we can just multiply it's existing offset by -1 to swap it.
+	RightShoulderOffset = CameraSpringArm->SocketOffset.Y;
+	LeftShoulderOffset = RightShoulderOffset * -1;
 }
 
 // --------------------------------------------------------------
@@ -28,6 +32,8 @@ void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// Smooth shoulder swapping.
+	MoveToShoulder(DeltaTime);
 }
 
 // --------------------------------------------------------------
@@ -35,8 +41,6 @@ void AShooterCharacter::Tick(float DeltaTime)
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	PlayerInputComponent->BindAxis(TEXT("SwapShoulder"), this, &AShooterCharacter::MoveFoward);
 
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AShooterCharacter::MoveFoward);
 	PlayerInputComponent->BindAxis(TEXT("Strafe"), this, &AShooterCharacter::MoveRight);
@@ -52,6 +56,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	// Inherited from ACharacter (child of APawn).
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &AShooterCharacter::Jump);
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Released, this, &AShooterCharacter::StopJumping);
+
+	PlayerInputComponent->BindAction(TEXT("SwapShoulder"), IE_Pressed, this, &AShooterCharacter::SwapShoulder);
 }
 
 // --------------------------------------------------------------
@@ -83,9 +89,28 @@ void AShooterCharacter::LookRightRate(float AxisValue)
 	AddControllerYawInput(AxisValue * RotationRate * GetWorld()->GetDeltaSeconds());
 }
 
-//
-/// Swap over-the-shoulder view between left and right.
+// --------------------------------------------------------------
+/// Swap over-the-shoulder view between left and right, toggled by input.
 void AShooterCharacter::SwapShoulder()
 {
+	if (bRightShoulder) {
+		bRightShoulder = false;
+	}
+	else {
+		bRightShoulder = true;
+	}
+}
 
+// --------------------------------------------------------------
+/// Interpolate towards desired shoulder offset.
+void AShooterCharacter::MoveToShoulder(float DeltaTime)
+{
+	float CurrentPos = CameraSpringArm->SocketOffset.Y;
+
+	if (bRightShoulder) {
+		CameraSpringArm->SocketOffset.Y = FMath::FInterpTo(CurrentPos, LeftShoulderOffset, DeltaTime, ShoulderSwapSpeed);
+	}
+	else {
+		CameraSpringArm->SocketOffset.Y = FMath::FInterpTo(CurrentPos, RightShoulderOffset, DeltaTime, ShoulderSwapSpeed);
+	}
 }
