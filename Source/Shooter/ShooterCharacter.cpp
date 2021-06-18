@@ -3,6 +3,8 @@
 
 #include "ShooterCharacter.h"
 
+#include "Weapon.h"
+
 // --------------------------------------------------------------
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -24,6 +26,20 @@ void AShooterCharacter::BeginPlay()
 	// we can just multiply it's existing offset by -1 to swap it.
 	RightShoulderOffset = CameraSpringArm->SocketOffset.Y;
 	LeftShoulderOffset = RightShoulderOffset * -1;
+
+	// Since our mesh has a sword already, we need to hide it.
+	// It's attached to the bone "weapon_r" in the skeleton.
+	// We made a new socket in it's place in the editor named WeaponSocket.
+	GetMesh()->HideBoneByName(TEXT("weapon_r"), PBO_None);
+
+	// Create our custom weapon to equip.
+	Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass);
+	// Attach it to this mesh's WeaponSocket (our player), and keep relative transform to bone.
+	Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("WeaponSocket"));
+	// Setting ownership here is relevant for multiplayer and damage.
+	// This means the weapon is also aware of the character, so references can be retrieved too!
+	Weapon->SetOwner(this);
+
 }
 
 // --------------------------------------------------------------
@@ -58,6 +74,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Released, this, &AShooterCharacter::StopJumping);
 
 	PlayerInputComponent->BindAction(TEXT("SwapShoulder"), IE_Pressed, this, &AShooterCharacter::SwapShoulder);
+	PlayerInputComponent->BindAction(TEXT("AttackBasic"), IE_Pressed, this, &AShooterCharacter::AttackBasic);
 }
 
 // --------------------------------------------------------------
@@ -108,9 +125,16 @@ void AShooterCharacter::MoveToShoulder(float DeltaTime)
 	float CurrentPos = CameraSpringArm->SocketOffset.Y;
 
 	if (bRightShoulder) {
-		CameraSpringArm->SocketOffset.Y = FMath::FInterpTo(CurrentPos, LeftShoulderOffset, DeltaTime, ShoulderSwapSpeed);
-	}
-	else {
 		CameraSpringArm->SocketOffset.Y = FMath::FInterpTo(CurrentPos, RightShoulderOffset, DeltaTime, ShoulderSwapSpeed);
 	}
+	else {
+		CameraSpringArm->SocketOffset.Y = FMath::FInterpTo(CurrentPos, LeftShoulderOffset, DeltaTime, ShoulderSwapSpeed);
+	}
+}
+
+// --------------------------------------------------------------
+/// Perform a basic attack with the currently held weapon.
+void AShooterCharacter::AttackBasic()
+{
+	Weapon->AttackBasic();
 }

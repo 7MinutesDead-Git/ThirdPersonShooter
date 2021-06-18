@@ -3,11 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
 
 #include "ShooterCharacter.generated.h"
 
+// ---------------------------------------------------------------
+class AWeapon;
+
+// ---------------------------------------------------------------
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
 {
@@ -52,4 +57,13 @@ private:
 	float LeftShoulderOffset;
 	UPROPERTY(EditAnywhere, Category="View")
 	float ShoulderSwapSpeed = 10;
+
+	// ----------------------------------
+	void AttackBasic();
+	/// Weapon class selected in editor.
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AWeapon> WeaponClass;
+
+	UPROPERTY()
+	AWeapon* Weapon;
 };
