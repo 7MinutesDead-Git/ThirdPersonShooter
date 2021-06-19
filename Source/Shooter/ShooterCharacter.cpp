@@ -111,9 +111,11 @@ void AShooterCharacter::LookRightRate(float AxisValue)
 void AShooterCharacter::SwapShoulder()
 {
 	if (bRightShoulder) {
+		// TODO: Play swish sound when we swap.
 		bRightShoulder = false;
 	}
 	else {
+		// TODO: Another another slightly different when swapping back.
 		bRightShoulder = true;
 	}
 }
