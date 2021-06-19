@@ -31,4 +31,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	USkeletalMeshComponent* DragonSwordMesh;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* WeaponFlash;
 };

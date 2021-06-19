@@ -3,7 +3,12 @@
 
 #include "Weapon.h"
 
+#include "DrawDebugHelpers.h"
+#include "Camera/CameraComponent.h"
+#include "Kismet/GameplayStatics.h"
 
+
+// ----------------------------------------------------------
 // Sets default values
 AWeapon::AWeapon()
 {
@@ -17,11 +22,38 @@ AWeapon::AWeapon()
 
 }
 
+// ----------------------------------------------------------
 void AWeapon::AttackBasic()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Attack!"));
+	UGameplayStatics::SpawnEmitterAttached(
+		WeaponFlash,		       // Emitter.
+		DragonSwordMesh,	       // Component to attach to.
+		TEXT("WeaponFlashSocket")  // Bone/Socket to attach to.
+		// FVector Location,
+		// FRotator Rotation,
+		// FVector Scale,
+		// EAttachLocation::Type LocationType,
+		// bool bAutoDestroy,
+		// EPSCPoolMethod PoolingMethod,
+		// bool bAutoActivateSystem
+		);
+
+	// This is completely overkill but I wanted to know if I could do it.
+	// Getting the FOV from the player camera, for the sake of DrawDebugCamera.
+	UCameraComponent* PlayerCam = Cast<UCameraComponent>(GetOwner()->GetComponentByClass(UCameraComponent::StaticClass()));
+
+	DrawDebugCamera(
+		GetWorld(),
+		PlayerCam->GetComponentLocation(),
+		PlayerCam->GetComponentRotation(),
+		PlayerCam->FieldOfView,
+		1,
+		FColor::Green,
+		false,
+		2);
 }
 
+// ----------------------------------------------------------
 // Called when the game starts or when spawned
 void AWeapon::BeginPlay()
 {
@@ -29,6 +61,7 @@ void AWeapon::BeginPlay()
 
 }
 
+// ----------------------------------------------------------
 // Called every frame
 void AWeapon::Tick(float DeltaTime)
 {
