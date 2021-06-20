@@ -28,6 +28,8 @@ public:
 private:
 	UFUNCTION()
 	void BounceImpact(FVector Start, FVector Direction);
+	UFUNCTION()
+	void DoDamage(FHitResult Hit, FVector Direction);
 
 	FVector StartLocation;
 	FRotator StartRotation;
@@ -36,6 +38,11 @@ private:
 	FVector RicochetDirection;
 	FTimerHandle RicochetTimerHandle;
 	FTimerDelegate RicochetDelegate;
+
+	UPROPERTY()
+	APawn* OwnerPawn;
+	UPROPERTY()
+	AController* OwnerController;
 
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* Root;
@@ -50,6 +57,8 @@ private:
 	UPROPERTY(EditAnywhere, Category="Effects")
 	USoundBase* FinalHitExplosionSound;
 
+	UPROPERTY(EditAnywhere, Category="Attacks")
+	float WeaponDamage = 10;
 	UPROPERTY(EditAnywhere, Category="Attacks")
 	float MaxBasicAttackRange;
 	UPROPERTY(EditAnywhere, Category="Attacks")

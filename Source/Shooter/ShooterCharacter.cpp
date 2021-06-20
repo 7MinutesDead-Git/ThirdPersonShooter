@@ -5,7 +5,7 @@
 
 #include "Weapon.h"
 
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------------
 // Sets default values
 AShooterCharacter::AShooterCharacter()
 {
@@ -14,12 +14,13 @@ AShooterCharacter::AShooterCharacter()
 
 }
 
-// --------------------------------------------------------------
-// Called when the game starts or when spawned
+// -----------------------------------------------------------------------------------
+// Called when the game starts or when spawned.
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Camera setup -------------------------------------------
 	// Get reference to the spring arm so we can shoulder swap.
 	CameraSpringArm = Cast<USpringArmComponent>(GetComponentByClass(USpringArmComponent::StaticClass()));
 	// As long as the spring arm in the BP is centered around the player,
@@ -27,11 +28,11 @@ void AShooterCharacter::BeginPlay()
 	RightShoulderOffset = CameraSpringArm->SocketOffset.Y;
 	LeftShoulderOffset = RightShoulderOffset * -1;
 
+	// Weapon setup -------------------------------------------
 	// Since our mesh has a sword already, we need to hide it.
 	// It's attached to the bone "weapon_r" in the skeleton.
 	// We made a new socket in it's place in the editor named WeaponSocket.
 	GetMesh()->HideBoneByName(TEXT("weapon_r"), PBO_None);
-
 	// Create our custom weapon to equip.
 	Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass);
 	// Attach it to this mesh's WeaponSocket (our player), and keep relative transform to bone.
@@ -40,9 +41,12 @@ void AShooterCharacter::BeginPlay()
 	// This means the weapon is also aware of the character, so references can be retrieved too!
 	Weapon->SetOwner(this);
 
+	// Health setup -------------------------------------------
+	Health = MaxHealth;
+
 }
 
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------------
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
@@ -52,7 +56,7 @@ void AShooterCharacter::Tick(float DeltaTime)
 	MoveToShoulder(DeltaTime);
 }
 
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------------
 // Called to bind functionality to input
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -77,19 +81,19 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction(TEXT("AttackBasic"), IE_Pressed, this, &AShooterCharacter::AttackBasic);
 }
 
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------------
 void AShooterCharacter::MoveFoward(float AxisValue)
 {
 	AddMovementInput(GetActorForwardVector() * AxisValue);
 }
 
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------------
 void AShooterCharacter::MoveRight(float AxisValue)
 {
 	AddMovementInput(GetActorRightVector() * AxisValue);
 }
 
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------------
 /// Framerate-independent implementation of AddControllerPitchInput, for joysticks/axis.
 void AShooterCharacter::LookUpRate(float AxisValue)
 {
@@ -99,14 +103,14 @@ void AShooterCharacter::LookUpRate(float AxisValue)
 	AddControllerPitchInput(AxisValue * RotationRate * GetWorld()->GetDeltaSeconds());
 }
 
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------------
 /// Framerate-independent implementation of AddControllerYawInput, for joysticks/axis.
 void AShooterCharacter::LookRightRate(float AxisValue)
 {
 	AddControllerYawInput(AxisValue * RotationRate * GetWorld()->GetDeltaSeconds());
 }
 
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------------
 /// Swap over-the-shoulder view between left and right, toggled by input.
 void AShooterCharacter::SwapShoulder()
 {
@@ -120,7 +124,7 @@ void AShooterCharacter::SwapShoulder()
 	}
 }
 
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------------
 /// Interpolate towards desired shoulder offset.
 void AShooterCharacter::MoveToShoulder(float DeltaTime)
 {
@@ -134,9 +138,41 @@ void AShooterCharacter::MoveToShoulder(float DeltaTime)
 	}
 }
 
-// --------------------------------------------------------------
+// -----------------------------------------------------------------------------------
 /// Perform a basic attack with the currently held weapon.
 void AShooterCharacter::AttackBasic()
 {
 	Weapon->AttackBasic();
+}
+
+// -----------------------------------------------------------------------------------
+float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	// Super calling parent TakeDamage first, passing in our parameters.
+	float DamageApplied = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	// Apply damage to our Health (not going lower than 0 or higher than MaxHealth.
+	Health = FMath::Clamp<float>(Health-DamageApplied, 0, MaxHealth);
+
+	// DEBUG.
+	UE_LOG(LogTemp, Warning, TEXT("%s hit %s for %f with component %s. HEALTH = %f"),
+		*EventInstigator->GetName(),
+		*GetName(),
+		DamageApplied,
+		*DamageCauser->GetName(),
+		Health
+		);
+
+	// Return adjusted damage value if needed.
+	return DamageApplied;
+}
+
+// -----------------------------------------------------------------------------------
+bool AShooterCharacter::IsDead() const
+{
+	if (Health <= 0) {
+		return true;
+	}
+	return false;
 }
