@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
 #include "GameFramework/Character.h"
-#include "GameFramework/SpringArmComponent.h"
 
 #include "ShooterCharacter.generated.h"
 
 // ---------------------------------------------------------------
+// Forward Declarations.
 class AWeapon;
+class SpringArmComponent;
 
 // ---------------------------------------------------------------
 UCLASS()

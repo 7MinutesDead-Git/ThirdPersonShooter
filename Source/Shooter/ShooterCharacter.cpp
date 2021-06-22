@@ -4,6 +4,7 @@
 #include "ShooterCharacter.h"
 
 #include "Weapon.h"
+#include "GameFramework/SpringArmComponent.h"
 
 // -----------------------------------------------------------------------------------
 // Sets default values
