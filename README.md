@@ -1,6 +1,7 @@
 # How did I figure out how to make that fancy ricochet mechanic?  
 Well let me show and tell you!  
 https://www.youtube.com/watch?v=N-jRAOw7MNw  
+*(Sound effects were made in Ableton Live, something I am an expert at from all my time writing and producing music)*
 
 First we learn how to do a line trace to hit an object/point and also spawn a particle effect. I found and altered an impact effect that had a sort of liquid dramatically explode from one angle. But since the particle spawns at random rotations, sometimes the liquid effect would gush out from what we hit, and other times it would go sideways or completely disappear behind the wall.
 
