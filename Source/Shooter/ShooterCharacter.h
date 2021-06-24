@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------
 // Forward Declarations.
 class AWeapon;
-class SpringArmComponent;
+class USpringArmComponent;
 
 // ---------------------------------------------------------------
 UCLASS()
