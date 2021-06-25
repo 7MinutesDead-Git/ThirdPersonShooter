@@ -8,6 +8,10 @@
 
 
 // --------------------------------------------------------------
+class UBlackboardComponent;
+class UCharacterMovementComponent;
+
+// --------------------------------------------------------------
 UCLASS()
 class SHOOTER_API AShooterAIController : public AAIController
 {
@@ -21,6 +25,12 @@ protected:
 
 private:
 	UPROPERTY()
+	UBlackboardComponent* BB;
+
+	UPROPERTY(EditAnywhere)
+	UBehaviorTree* AIBehavior;
+
+	UPROPERTY()
 	APawn* Player;
 	UPROPERTY(EditAnywhere)
 	float FollowDistance;
@@ -29,7 +39,7 @@ private:
 	float Elapsed;
 	float LastKnownPredictionLimit = 1;
 
-	bool SeenPlayer = false;
+	bool SeenPlayerBefore = false;
 
 	FVector PatrolPosition;
 	FVector LastKnownPosition;

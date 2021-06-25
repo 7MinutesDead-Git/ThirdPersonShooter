@@ -5,6 +5,7 @@
 
 #include "Weapon.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // -----------------------------------------------------------------------------------
 // Sets default values
@@ -78,6 +79,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &AShooterCharacter::Jump);
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Released, this, &AShooterCharacter::StopJumping);
 
+	PlayerInputComponent->BindAction(TEXT("Dash"), IE_Pressed, this, &AShooterCharacter::Dash);
+
 	PlayerInputComponent->BindAction(TEXT("SwapShoulder"), IE_Pressed, this, &AShooterCharacter::SwapShoulder);
 	PlayerInputComponent->BindAction(TEXT("AttackBasic"), IE_Pressed, this, &AShooterCharacter::AttackBasic);
 }
@@ -109,6 +112,65 @@ void AShooterCharacter::LookUpRate(float AxisValue)
 void AShooterCharacter::LookRightRate(float AxisValue)
 {
 	AddControllerYawInput(AxisValue * RotationRate * GetWorld()->GetDeltaSeconds());
+}
+
+// -----------------------------------------------------------------------------------
+/// Spawn particles related to movement, both on character and at origin of movement.
+void AShooterCharacter::SpawnMovementParticles()
+{
+	// Play dash particle on ourselves...
+	UGameplayStatics::SpawnEmitterAttached(
+		DashParticleEffect,			// Particle to spawn.
+		GetMesh(),					// Attach to our mesh.
+		NAME_None,					// Bone name to attach to.
+		FVector::ZeroVector,		// Relative Location.
+		GetVelocity().Rotation()	// Rotate the effect to face towards our velocity.
+		);
+
+	// And where we just were.
+	UGameplayStatics::SpawnEmitterAtLocation(
+		GetWorld(),									   // World Context.
+		DashParticleEffect,							   // Particle emitter.
+		GetActorLocation() + (FVector::UpVector * 50), // Spawn at this location.
+		GetVelocity().Rotation()					   // Rotate the effect to face towards our velocity.
+		);
+}
+
+// -----------------------------------------------------------------------------------
+/// Dash/teleport in intended move direction based on WASD input, or forward if standing still.
+void AShooterCharacter::Dash()
+{
+	float ForwardValue = GetInputAxisValue("MoveForward");
+	float StrafeValue = GetInputAxisValue("Strafe");
+	FVector ForwardVector = GetActorForwardVector();
+	FVector StrafeVector = GetActorRightVector();
+	FVector Direction = (ForwardVector * ForwardValue) + (StrafeVector * StrafeValue);
+
+	FVector Location = GetActorLocation();
+	FVector Stationary = FVector::ZeroVector;
+
+	if (GetVelocity() != Stationary) {
+		DashDestination = Location + Direction * DashDistance;
+	}
+	else {
+		// Dash forward if not moving, so we at least do something when we hit Dash input.
+		DashDestination = Location + ForwardVector * DashDistance;
+	}
+
+	SpawnMovementParticles();
+
+	// Make sure we sweep check ("true") so we don't teleport through walls.
+	SetActorLocation(DashDestination, true);
+}
+
+// -----------------------------------------------------------------------------------
+// Overriding to play additional particles when we jump.
+void AShooterCharacter::Jump()
+{
+	Super::Jump();
+	// Ensure we don't continue to spawn particles when we can't double/triple jump anymore.
+	if (JumpCurrentCount < JumpMaxCount && JumpCurrentCount != 0)
+		SpawnMovementParticles();
 }
 
 // -----------------------------------------------------------------------------------

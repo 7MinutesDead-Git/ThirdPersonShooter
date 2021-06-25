@@ -3,6 +3,8 @@
 
 #include "ShooterAIController.h"
 
+#include "BehaviorTree/BlackboardComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -14,7 +16,13 @@ void AShooterAIController::BeginPlay()
 	// Get reference to player in world.
 	Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	PatrolPosition = K2_GetActorLocation();
-	MoveToLocation(PatrolPosition);
+
+	// UBehaviorTree for AI!
+	if (AIBehavior) {
+		RunBehaviorTree(AIBehavior);
+		BB = GetBlackboardComponent();
+		BB->SetValueAsVector(TEXT("AI Home Location"), PatrolPosition);
+	}
 }
 
 
@@ -23,35 +31,13 @@ void AShooterAIController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	bool SeesPlayer = LineOfSightTo(Player, FVector::ZeroVector, true);
+	bool SeesPlayer = LineOfSightTo(Player);
 
 	if (SeesPlayer) {
-		SeenPlayer = true;
-		Elapsed = 0;
-		// Have this AI focus on the player.
-		SetFocus(Player);
-		// Move towards the player.
-		MoveToActor(Player, FollowDistance);
-		// Keep this up-to-date so we can move towards this once we lose LOS.
-		LastKnownPosition = Player->GetActorLocation();
-		UE_LOG(LogTemp, Warning, TEXT("Moving towards player."));
+		BB->SetValueAsVector(TEXT("Player Location"), Player->GetActorLocation());
+		BB->SetValueAsVector(TEXT("Last Known Player Location"), Player->GetActorLocation());
 	}
-	else if (SeenPlayer) {
-		Elapsed += DeltaSeconds;
-
-		// Follow beyond losing LOS so we appear to investigate a bit beyond the last seen corner.
-		if (Elapsed <= LastKnownPredictionLimit) {
-			UE_LOG(LogTemp, Warning, TEXT("Moving to last known location."));
-			LastKnownPosition = Player->GetActorLocation();
-		}
-
-		// Constantly move towards last known position until we lose interest.
-		MoveToLocation(LastKnownPosition);
-
-		if (Elapsed > TimeToLoseInterest) {
-			UE_LOG(LogTemp, Warning, TEXT("Heading home."));
-			ClearFocus(EAIFocusPriority::Gameplay);
-			MoveToLocation(PatrolPosition);
-		}
+	else {
+		BB->ClearValue(TEXT("Player Location"));
 	}
 }

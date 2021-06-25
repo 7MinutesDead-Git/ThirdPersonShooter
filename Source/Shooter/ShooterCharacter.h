@@ -65,6 +65,19 @@ private:
 	void MoveRight(float AxisValue);
 	void LookUpRate(float AxisValue);
 	void LookRightRate(float AxisValue);
+	void SpawnMovementParticles();
+	void Dash();
+	void Jump() override;;
+
+	UPROPERTY(EditAnywhere, Category="Movement")
+	float DashDistance = 100;
+
+	UPROPERTY(EditAnywhere, Category="Effects")
+	USoundBase* DashSound;
+	UPROPERTY(EditAnywhere, Category="Effects")
+	UParticleSystem* DashParticleEffect;
+
+	FVector DashDestination;
 
 	UPROPERTY(EditAnywhere, Category="View")
 	float RotationRate = 100;
