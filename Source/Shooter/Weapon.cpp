@@ -85,13 +85,20 @@ void AWeapon::BounceImpact(FVector Start, FVector Direction)
 	// Then we travel out in a line from our ViewLocation in our ViewDirection, out to our max range.
 	FVector EndPoint = Start + Direction * MaxBasicAttackRange;
 
-	// Finally, do the LineTrace.
 	FHitResult Hit;
+	FCollisionQueryParams HitParameters;
+	// If indicating CollisionQueryParams, make sure we keep trace to complex.
+	HitParameters.bTraceComplex = true;
+	// Ensure we don't hit ourselves or our weapon.
+	HitParameters.AddIgnoredActor(this);
+	HitParameters.AddIgnoredActor(GetOwner());
+
 	bool HitSuccess = GetWorld()->LineTraceSingleByChannel(
-		OUT Hit,			  // Out hit info.
-		Start,		          // Start.
-		EndPoint,			  // End.
-		ECC_GameTraceChannel1 // Our "Bullet" channel is here, as shown in Config/DefaultEngine.ini
+		OUT Hit,			   // Out hit info.
+		Start,		           // Start.
+		EndPoint,			   // End.
+		ECC_GameTraceChannel1, // Our "Bullet" channel is here, as shown in Config/DefaultEngine.ini
+		HitParameters		   // Collision Parameters (make sure we don't shoot ourselves).
 		);
 
 	if (HitSuccess) {
@@ -145,6 +152,7 @@ void AWeapon::DoDamage(FHitResult Hit, FVector Direction)
 	AActor* HitActor = Hit.GetActor();
 
 	if (HitActor) {
+
 		// "nullptr" is where we could specify a damage type if we make multiple (blunt, piercing, fire, etc).
 		FPointDamageEvent DamageEvent(WeaponDamage, Hit, Direction, nullptr);
 

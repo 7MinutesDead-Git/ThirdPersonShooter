@@ -4,6 +4,7 @@
 #include "ShooterCharacter.h"
 
 #include "Weapon.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -242,14 +243,24 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 
 	PlayAnimMontage(HitAnimation);
 
-	// DEBUG.
-	UE_LOG(LogTemp, Warning, TEXT("%s hit %s for %f with component %s. HEALTH = %f"),
-		*EventInstigator->GetName(),
-		*GetName(),
-		DamageApplied,
-		*DamageCauser->GetName(),
-		Health
-		);
+	// // DEBUG.
+	// UE_LOG(LogTemp, Warning, TEXT("%s hit %s for %f with component %s. HEALTH = %f"),
+	// 	*EventInstigator->GetName(),
+	// 	*GetName(),
+	// 	DamageApplied,
+	// 	*DamageCauser->GetName(),
+	// 	Health
+	// 	);
+
+	if (IsDead()) {
+		// If we die, detach the controller and disable collision of the capsule.
+		DetachFromControllerPendingDestroy();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		// Swap to ragdoll. TODO: Fix ragdoll weirdness.
+		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+		GetMesh()->SetSimulatePhysics(true);
+		GetMesh()->bPauseAnims = true;
+	}
 
 	// Return adjusted damage value if needed.
 	return DamageApplied;
