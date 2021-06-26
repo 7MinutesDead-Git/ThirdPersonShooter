@@ -30,14 +30,4 @@ void AShooterAIController::BeginPlay()
 void AShooterAIController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	bool SeesPlayer = LineOfSightTo(Player);
-
-	if (SeesPlayer) {
-		BB->SetValueAsVector(TEXT("Player Location"), Player->GetActorLocation());
-		BB->SetValueAsVector(TEXT("Last Known Player Location"), Player->GetActorLocation());
-	}
-	else {
-		BB->ClearValue(TEXT("Player Location"));
-	}
 }

@@ -21,9 +21,6 @@ AWeapon::AWeapon()
 	SetRootComponent(Root);
 	DragonSwordMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Dragon Sword Skeletal Mesh"));
 	DragonSwordMesh->SetupAttachment(Root);
-
-
-
 }
 
 // ----------------------------------------------------------
@@ -31,7 +28,7 @@ AWeapon::AWeapon()
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-	RicochetBounceDelay = RicochetBounceDelayDefault;
+	RicochetBounceDelay = RicochetBounceStartDelay;
 }
 
 // ----------------------------------------------------------
@@ -46,7 +43,7 @@ void AWeapon::Tick(float DeltaTime)
 /// Perform the basic attack with this weapon. -7MD
 void AWeapon::AttackBasic()
 {
-	RicochetBounceDelay = RicochetBounceDelayDefault;
+	RicochetBounceDelay = RicochetBounceStartDelay;
 	RicochetBounces = 0;
 
 	// Attack Sound.

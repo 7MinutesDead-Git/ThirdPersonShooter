@@ -66,7 +66,7 @@ private:
 	UPROPERTY(EditAnywhere, Category="Attacks")
 	int32 RicochetMaxBounces = 200;
 	UPROPERTY(EditAnywhere, Category="Attacks")
-	float RicochetBounceDelayDefault = 0.1f;
+	float RicochetBounceStartDelay = 0.1f;
 	UPROPERTY(EditAnywhere, Category="Attacks")
 	float RicochetBounceSpeedGrowthFactor = 0.99f;
 	float RicochetBounceDelay;

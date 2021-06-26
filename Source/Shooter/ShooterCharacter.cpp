@@ -158,6 +158,7 @@ void AShooterCharacter::Dash()
 	}
 
 	SpawnMovementParticles();
+	PlayAnimMontage(DashAnimation);
 
 	// Make sure we sweep check ("true") so we don't teleport through walls.
 	SetActorLocation(DashDestination, true);
@@ -168,6 +169,8 @@ void AShooterCharacter::Dash()
 void AShooterCharacter::Jump()
 {
 	Super::Jump();
+
+	PlayAnimMontage(JumpAnimation);
 	// Ensure we don't continue to spawn particles when we can't double/triple jump anymore.
 	if (JumpCurrentCount < JumpMaxCount && JumpCurrentCount != 0)
 		SpawnMovementParticles();
@@ -206,6 +209,25 @@ void AShooterCharacter::MoveToShoulder(float DeltaTime)
 void AShooterCharacter::AttackBasic()
 {
 	Weapon->AttackBasic();
+	Attacking = true;
+
+	PlayAnimMontage(AttackAnimation);
+
+	FTimerHandle StopAttackTimer;
+	GetWorld()->GetTimerManager().SetTimer(
+		OUT StopAttackTimer,
+		this,
+		&AShooterCharacter::StopAttacking,
+		AttackTimeLength,
+		false
+		);
+}
+
+// -----------------------------------------------------------------------------------
+void AShooterCharacter::StopAttacking()
+{
+	Attacking = false;
+	StopAnimMontage(AttackAnimation);
 }
 
 // -----------------------------------------------------------------------------------
@@ -217,6 +239,8 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 
 	// Apply damage to our Health (not going lower than 0 or higher than MaxHealth.
 	Health = FMath::Clamp<float>(Health-DamageApplied, 0, MaxHealth);
+
+	PlayAnimMontage(HitAnimation);
 
 	// DEBUG.
 	UE_LOG(LogTemp, Warning, TEXT("%s hit %s for %f with component %s. HEALTH = %f"),
@@ -239,3 +263,23 @@ bool AShooterCharacter::IsDead() const
 	}
 	return false;
 }
+
+// -----------------------------------------------------------------------------------
+bool AShooterCharacter::IsAttacking() const
+{
+	return Attacking;
+}
+
+// -----------------------------------------------------------------------------------
+bool AShooterCharacter::IsDashing() const
+{
+	return Dashing;
+}
+
+// -----------------------------------------------------------------------------------
+bool AShooterCharacter::IsJumping() const
+{
+	return bPressedJump;
+}
+
+// -----------------------------------------------------------------------------------

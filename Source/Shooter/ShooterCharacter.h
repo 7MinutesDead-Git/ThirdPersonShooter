@@ -58,10 +58,26 @@ public:
 	UFUNCTION(BlueprintPure)
 	bool IsDead() const;
 
+	UFUNCTION(BlueprintPure)
+	bool IsAttacking() const;
+
+	UFUNCTION(BlueprintPure)
+	bool IsDashing() const;
+
+	UFUNCTION(BlueprintPure)
+	bool IsJumping() const;
+
+
 	/// Perform basic attack.
 	void AttackBasic();
+	void StopAttacking();
 
 private:
+	// ----------------------------------
+	// State.
+
+	bool Attacking;
+	bool Dashing;
 	// ----------------------------------
 	// Control.
 	void MoveFoward(float AxisValue);
@@ -113,4 +129,22 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category="Health")
 	float Health;
+
+	UPROPERTY(EditAnywhere, Category="Attacking")
+	float AttackTimeLength = 1;
+
+	// -----------------------------------
+	// Animations.
+	UPROPERTY(EditDefaultsOnly, Category="Animations")
+	UAnimMontage* AttackAnimation;
+
+	UPROPERTY(EditDefaultsOnly, Category="Animations")
+	UAnimMontage* DashAnimation;
+
+	UPROPERTY(EditDefaultsOnly, Category="Animations")
+	UAnimMontage* JumpAnimation;
+
+	UPROPERTY(EditDefaultsOnly, Category="Animations")
+	UAnimMontage* HitAnimation;
+
 };

@@ -20,8 +20,13 @@ EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 	Super::ExecuteTask(OwnerComp, NodeMemory);
 
 	// How to get the AI Controller from this Task, so we can fire off the attack function.
-	AShooterCharacter* AIShooterCharacter = Cast<AShooterCharacter>(OwnerComp.GetAIOwner()->GetPawn());
+	AShooterCharacter* OwnerNPC = Cast<AShooterCharacter>(OwnerComp.GetAIOwner()->GetPawn());
 
-	AIShooterCharacter->AttackBasic();
+	// Protection from any potential null pointers,
+	// ie couldn't cast to ShooterCharacter, or there is no AIOwner.
+	if (!OwnerNPC || !OwnerComp.GetAIOwner())
+		return EBTNodeResult::Failed;
+
+	OwnerNPC->AttackBasic();
 	return EBTNodeResult::Succeeded;
 }
