@@ -58,6 +58,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	bool IsDead() const;
 
+	/// Perform basic attack.
+	void AttackBasic();
+
 private:
 	// ----------------------------------
 	// Control.
@@ -98,7 +101,6 @@ private:
 
 	// ----------------------------------
 	// Attack stuff.
-	void AttackBasic();
 	/// Weapon class selected in editor.
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AWeapon> WeaponClass;
