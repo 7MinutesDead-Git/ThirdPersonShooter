@@ -3,6 +3,7 @@
 
 #include "ShooterCharacter.h"
 
+#include "SurvivalGameMode.h"
 #include "Weapon.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -22,6 +23,8 @@ AShooterCharacter::AShooterCharacter()
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	WorldSettings = GetWorldSettings();
 
 	// Camera setup -------------------------------------------
 	// Get reference to the spring arm so we can shoulder swap.
@@ -117,38 +120,61 @@ void AShooterCharacter::LookRightRate(float AxisValue)
 
 // -----------------------------------------------------------------------------------
 /// Spawn particles related to movement, both on character and at origin of movement.
-void AShooterCharacter::SpawnMovementParticles()
+void AShooterCharacter::SpawnMovementParticles(FVector Direction)
 {
+	const FVector LocationOffset = DashParticleEffectLocationOffset;
+
+	if (GetVelocity().Size() > 0.1) {
+		// Needed to counteract mesh's own rotation when attached.
+		DashParticleAttachedRotation = Direction.Rotation() - GetActorRotation();
+		DashParticleRotation = Direction.Rotation();
+		// This resolves strange offset only when attaching to Mesh. I don't know why yet.
+		DashParticleAttachedRotation.Yaw += 90;
+	}
+	else {
+		// If we're dashing from a standstill then we can't get direction from velocity.
+		DashParticleAttachedRotation = GetActorForwardVector().Rotation() - GetActorRotation();
+		DashParticleAttachedRotation.Yaw += 90;
+		DashParticleRotation = GetActorForwardVector().Rotation();
+	}
+
 	// Play dash particle on ourselves...
 	UGameplayStatics::SpawnEmitterAttached(
-		DashParticleEffect,			// Particle to spawn.
-		GetMesh(),					// Attach to our mesh.
-		NAME_None,					// Bone name to attach to.
-		FVector::ZeroVector,		// Relative Location.
-		GetVelocity().Rotation()	// Rotate the effect to face towards our velocity.
+		DashParticleEffect,			  // Particle to spawn.
+		GetMesh(),				  	  // Attach to our mesh.
+		NAME_None,				 	  // Bone name to attach to.
+		LocationOffset,		          // Relative Location.
+		DashParticleAttachedRotation, // Relative Rotation.
+		DashParticleEffectScale,	  // Scale.
+		EAttachLocation::SnapToTarget // Type of Location offset.
 		);
 
 	// And where we just were.
 	UGameplayStatics::SpawnEmitterAtLocation(
-		GetWorld(),									   // World Context.
-		DashParticleEffect,							   // Particle emitter.
-		GetActorLocation() + (FVector::UpVector * 50), // Spawn at this location.
-		GetVelocity().Rotation()					   // Rotate the effect to face towards our velocity.
+		GetWorld(),							 // World Context.
+		DashParticleEffect,					 // Particle emitter.
+		GetActorLocation() + LocationOffset, // Spawn at this location.
+		DashParticleRotation     			 // Rotate the effect to face towards our velocity.
 		);
 }
 
 // -----------------------------------------------------------------------------------
 /// Dash/teleport in intended move direction based on WASD input, or forward if standing still.
+/// Very Tracer baby.
 void AShooterCharacter::Dash()
 {
-	float ForwardValue = GetInputAxisValue("MoveForward");
-	float StrafeValue = GetInputAxisValue("Strafe");
-	FVector ForwardVector = GetActorForwardVector();
-	FVector StrafeVector = GetActorRightVector();
-	FVector Direction = (ForwardVector * ForwardValue) + (StrafeVector * StrafeValue);
+	DashSlowTime();
 
-	FVector Location = GetActorLocation();
-	FVector Stationary = FVector::ZeroVector;
+	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), DashSound, GetActorLocation());
+
+	const float ForwardValue = GetInputAxisValue("MoveForward");
+	const float StrafeValue = GetInputAxisValue("Strafe");
+	const FVector ForwardVector = GetActorForwardVector();
+	const FVector StrafeVector = GetActorRightVector();
+	const FVector Direction = (ForwardVector * ForwardValue) + (StrafeVector * StrafeValue);
+
+	const FVector Location = GetActorLocation();
+	const FVector Stationary = FVector::ZeroVector;
 
 	if (GetVelocity() != Stationary) {
 		DashDestination = Location + Direction * DashDistance;
@@ -158,7 +184,7 @@ void AShooterCharacter::Dash()
 		DashDestination = Location + ForwardVector * DashDistance;
 	}
 
-	SpawnMovementParticles();
+	SpawnMovementParticles(Direction);
 	PlayAnimMontage(DashAnimation);
 
 	// Make sure we sweep check ("true") so we don't teleport through walls.
@@ -166,7 +192,25 @@ void AShooterCharacter::Dash()
 }
 
 // -----------------------------------------------------------------------------------
-// Overriding to play additional particles when we jump.
+/// Slow motion when we dash. Return to normal time after delay.
+void AShooterCharacter::DashSlowTime()
+{
+	if (WorldSettings) {
+		WorldSettings->SetTimeDilation(DashTimeDilation);
+		// Resume normal speed after short delay.
+		GetWorldTimerManager().SetTimer(DashSlowTimeTimer, this, &AShooterCharacter::ReturnToNormalTime, DashTimeDilationLength);
+	}
+}
+
+// -----------------------------------------------------------------------------------
+/// Reset time dilation to 1.
+void AShooterCharacter::ReturnToNormalTime() const
+{
+	WorldSettings->SetTimeDilation(1);
+}
+
+// -----------------------------------------------------------------------------------
+// Overriding to do extra stuff when we jump.
 void AShooterCharacter::Jump()
 {
 	Super::Jump();
@@ -174,7 +218,7 @@ void AShooterCharacter::Jump()
 	PlayAnimMontage(JumpAnimation);
 	// Ensure we don't continue to spawn particles when we can't double/triple jump anymore.
 	if (JumpCurrentCount < JumpMaxCount && JumpCurrentCount != 0)
-		SpawnMovementParticles();
+		SpawnMovementParticles(GetVelocity());
 }
 
 // -----------------------------------------------------------------------------------
@@ -225,6 +269,7 @@ void AShooterCharacter::AttackBasic()
 }
 
 // -----------------------------------------------------------------------------------
+/// Set Attacking to false and stop animations.
 void AShooterCharacter::StopAttacking()
 {
 	Attacking = false;
@@ -243,16 +288,12 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 
 	PlayAnimMontage(HitAnimation);
 
-	// // DEBUG.
-	// UE_LOG(LogTemp, Warning, TEXT("%s hit %s for %f with component %s. HEALTH = %f"),
-	// 	*EventInstigator->GetName(),
-	// 	*GetName(),
-	// 	DamageApplied,
-	// 	*DamageCauser->GetName(),
-	// 	Health
-	// 	);
-
 	if (IsDead()) {
+		// Let GameMode know this pawn died.
+		AShooterGameModeBase* GameMode = GetWorld()->GetAuthGameMode<AShooterGameModeBase>();
+		if (GameMode) {
+			GameMode->PawnKilled(this);
+		}
 		// If we die, detach the controller and disable collision of the capsule.
 		DetachFromControllerPendingDestroy();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -292,5 +333,3 @@ bool AShooterCharacter::IsJumping() const
 {
 	return bPressedJump;
 }
-
-// -----------------------------------------------------------------------------------

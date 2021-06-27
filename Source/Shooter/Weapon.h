@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
@@ -42,6 +44,8 @@ private:
 	UPROPERTY()
 	APawn* OwnerPawn;
 	UPROPERTY()
+	UCapsuleComponent* OwnerCapsule;
+	UPROPERTY()
 	AController* OwnerController;
 
 	UPROPERTY(VisibleAnywhere)
@@ -49,6 +53,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	USkeletalMeshComponent* DragonSwordMesh;
+
+	/// Enable to shoot yourself forward on the same Bounce trajectory as your projectile.
+	UPROPERTY(EditAnywhere, Category="Nonsense")
+	bool bToggleSelfRicochet = false;
 
 	UPROPERTY(EditAnywhere, Category="Effects")
 	UParticleSystem* WeaponFlash;

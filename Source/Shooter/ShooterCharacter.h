@@ -75,7 +75,6 @@ public:
 private:
 	// ----------------------------------
 	// State.
-
 	bool Attacking;
 	bool Dashing;
 	// ----------------------------------
@@ -84,17 +83,34 @@ private:
 	void MoveRight(float AxisValue);
 	void LookUpRate(float AxisValue);
 	void LookRightRate(float AxisValue);
-	void SpawnMovementParticles();
+	void SpawnMovementParticles(FVector Direction);
 	void Dash();
-	void Jump() override;;
+	void DashSlowTime();
+	void ReturnToNormalTime() const;
+	virtual void Jump() override;
+
+	FTimerHandle DashSlowTimeTimer;
+	FRotator DashParticleRotation;
+	FRotator DashParticleAttachedRotation;
+
+	UPROPERTY()
+	AWorldSettings* WorldSettings;
 
 	UPROPERTY(EditAnywhere, Category="Movement")
 	float DashDistance = 100;
+	UPROPERTY(EditAnywhere, Category="Movement")
+	float DashTimeDilation = 0.3;
+	UPROPERTY(EditAnywhere, Category="Movement")
+	float DashTimeDilationLength = 0.5;
 
 	UPROPERTY(EditAnywhere, Category="Effects")
 	USoundBase* DashSound;
 	UPROPERTY(EditAnywhere, Category="Effects")
 	UParticleSystem* DashParticleEffect;
+	UPROPERTY(EditAnywhere, Category="Effects")
+	FVector DashParticleEffectScale = FVector::OneVector * 2;
+	UPROPERTY(EditAnywhere, Category="Effects")
+	FVector DashParticleEffectLocationOffset = FVector::UpVector * 50;
 
 	FVector DashDestination;
 

@@ -5,9 +5,9 @@
 
 #include "DrawDebugHelpers.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Field/FieldSystemNodes.h"
 #include "Kismet/GameplayStatics.h"
-#include "Particles/ParticleSystem.h"
 
 
 // ----------------------------------------------------------
@@ -67,6 +67,13 @@ void AWeapon::AttackBasic()
 	// Then from the controller we can get the viewpoint.
 	OwnerController->GetPlayerViewPoint(OUT StartLocation, OUT StartRotation);
 
+	if (bToggleSelfRicochet) {
+		// Should disable gravity while pawn is bouncing around.
+		OwnerCapsule = Cast<UCapsuleComponent>(OwnerPawn->GetComponentByClass(UCapsuleComponent::StaticClass()));
+		if (OwnerCapsule)
+			OwnerCapsule->SetEnableGravity(false);
+	}
+
 	// Direction that points from the rotation.
 	// We'll make this our first direction.
 	RicochetDirection = StartRotation.Vector();
@@ -111,6 +118,15 @@ void AWeapon::BounceImpact(FVector Start, FVector Direction)
 		RicochetDirection = RicochetRotation.Vector();
 		StartLocation = Hit.Location;
 
+		if (OwnerPawn && bToggleSelfRicochet) {
+			// Allows us to bounce into the walls, hopefully without going inside them.
+			// This will take us to the hit location, but stick us outward from the normal to avoid clipping.
+			// A sweep would seem the better solution, but in practice it prevents complete movement.
+			// TODO: A more elegant solution needs to be made. Leaving magic number here for now.
+			FVector AdjustedDirection = Hit.Location + Hit.ImpactNormal.Rotation().Vector() * 300;
+			OwnerPawn->SetActorLocation(AdjustedDirection);
+		}
+
 		// Spawn particles!
 		UGameplayStatics::SpawnEmitterAtLocation(
 			GetWorld(),		   // World context.
@@ -139,8 +155,11 @@ void AWeapon::BounceImpact(FVector Start, FVector Direction)
 			GetWorld()->GetTimerManager().SetTimer(RicochetTimerHandle, RicochetDelegate, RicochetBounceDelay, false);
 		}
 		else if (RicochetBounces == RicochetMaxBounces) {
+			if (OwnerCapsule)
+				OwnerCapsule->SetEnableGravity(true);
 			// The final explosion after all the bounces are done.
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), FinalHitExplosionSound, Hit.ImpactPoint, FRotator::ZeroRotator);
+			// TODO: Different sound effect.
+			// TODO: Different Explosion effect.
 		}
 	}
 }
