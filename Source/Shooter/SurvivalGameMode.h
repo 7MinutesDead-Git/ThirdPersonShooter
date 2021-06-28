@@ -17,4 +17,7 @@ class SHOOTER_API ASurvivalGameMode : public AShooterGameModeBase
 public:
 	virtual void PawnKilled(APawn* PawnKilled) override;
 
+private:
+	void EndGame(bool PlayerIsWinner);
+
 };

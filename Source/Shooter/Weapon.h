@@ -32,6 +32,9 @@ private:
 	void BounceImpact(FVector Start, FVector Direction);
 	UFUNCTION()
 	void DoDamage(FHitResult Hit, FVector Direction);
+	bool BounceLineTrace(FVector Start, FVector Direction, FHitResult& OutHit);
+	void ReflectForNextBounce(const FHitResult Hit, const FVector Direction);
+	void DoNextBounceImpact();
 
 	FVector StartLocation;
 	FRotator StartRotation;

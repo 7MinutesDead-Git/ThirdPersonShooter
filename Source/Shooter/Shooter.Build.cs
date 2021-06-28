@@ -8,8 +8,9 @@ public class Shooter : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		// 7MD: Needed to add "GameplayTasks" manually to be able to make BTTask C++ class.
-		PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "InputCore", "GameplayTasks" });
+		// Needed to add "GameplayTasks" manually to be able to make BTTask C++ class.
+		// Needed to add "UMG" to be able to use UserWidget class.
+		PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "InputCore", "GameplayTasks", "UMG" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

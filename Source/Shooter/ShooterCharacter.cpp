@@ -29,6 +29,7 @@ void AShooterCharacter::BeginPlay()
 	// Camera setup -------------------------------------------
 	// Get reference to the spring arm so we can shoulder swap.
 	CameraSpringArm = Cast<USpringArmComponent>(GetComponentByClass(USpringArmComponent::StaticClass()));
+	CameraSpringArmLagSpeedDefault = CameraSpringArm->CameraLagSpeed;
 	// As long as the spring arm in the BP is centered around the player,
 	// we can just multiply it's existing offset by -1 to swap it.
 	RightShoulderOffset = CameraSpringArm->SocketOffset.Y;
@@ -47,8 +48,9 @@ void AShooterCharacter::BeginPlay()
 	// This means the weapon is also aware of the character, so references can be retrieved too!
 	Weapon->SetOwner(this);
 
-	// Health setup -------------------------------------------
+	// Player resources setup. --------------------------------
 	Health = MaxHealth;
+	DashResource = DashResourceMax;
 
 }
 
@@ -60,6 +62,8 @@ void AShooterCharacter::Tick(float DeltaTime)
 
 	// Smooth shoulder swapping.
 	MoveToShoulder(DeltaTime);
+	// Replenish Dash resource over time, clamped between 0 and DashResourceMax.
+	DashResource = FMath::Clamp<float>(DashResource + (DashRefillRate * DeltaTime), 0, DashResourceMax);
 }
 
 // -----------------------------------------------------------------------------------
@@ -93,6 +97,14 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 void AShooterCharacter::MoveFoward(float AxisValue)
 {
 	AddMovementInput(GetActorForwardVector() * AxisValue);
+
+	// So the character doesn't disappear from view when backpedaling or teleporting backwards too fast.
+	if (AxisValue < 0) {
+		CameraSpringArm->CameraLagSpeed = CameraBackpedalSpeed;
+	}
+	else {
+		CameraSpringArm->CameraLagSpeed = CameraSpringArmLagSpeedDefault;
+	}
 }
 
 // -----------------------------------------------------------------------------------
@@ -120,11 +132,11 @@ void AShooterCharacter::LookRightRate(float AxisValue)
 
 // -----------------------------------------------------------------------------------
 /// Spawn particles related to movement, both on character and at origin of movement.
-void AShooterCharacter::SpawnMovementParticles(FVector Direction)
+void AShooterCharacter::SpawnMovementParticles(const FVector Direction, const float ForwardAxisInput, const float StrafeAxisInput)
 {
 	const FVector LocationOffset = DashParticleEffectLocationOffset;
 
-	if (GetVelocity().Size() > 0.1) {
+	if (ForwardAxisInput != 0 || StrafeAxisInput != 0) {
 		// Needed to counteract mesh's own rotation when attached.
 		DashParticleAttachedRotation = Direction.Rotation() - GetActorRotation();
 		DashParticleRotation = Direction.Rotation();
@@ -163,32 +175,42 @@ void AShooterCharacter::SpawnMovementParticles(FVector Direction)
 /// Very Tracer baby.
 void AShooterCharacter::Dash()
 {
-	DashSlowTime();
+	if (DashResource >= DashCost) {
+		DashSlowTime();
 
-	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), DashSound, GetActorLocation());
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), DashSound, GetActorLocation());
 
-	const float ForwardValue = GetInputAxisValue("MoveForward");
-	const float StrafeValue = GetInputAxisValue("Strafe");
-	const FVector ForwardVector = GetActorForwardVector();
-	const FVector StrafeVector = GetActorRightVector();
-	const FVector Direction = (ForwardVector * ForwardValue) + (StrafeVector * StrafeValue);
+		const float ForwardValue = GetInputAxisValue("MoveForward");
+		const float StrafeValue = GetInputAxisValue("Strafe");
+		const FVector ForwardVector = GetActorForwardVector();
+		const FVector StrafeVector = GetActorRightVector();
 
-	const FVector Location = GetActorLocation();
-	const FVector Stationary = FVector::ZeroVector;
+		const FVector Direction = (ForwardVector * ForwardValue) + (StrafeVector * StrafeValue);
+		const FVector Location = GetActorLocation();
 
-	if (GetVelocity() != Stationary) {
-		DashDestination = Location + Direction * DashDistance;
+		if (ForwardValue != 0 || StrafeValue != 0) {
+			DashDestination = Location + Direction * DashDistance;
+		}
+		else {
+			// Dash forward if not moving, so we at least do something when we hit Dash input.
+			DashDestination = Location + ForwardVector * DashDistance;
+		}
+
+		SpawnMovementParticles(Direction, ForwardValue, StrafeValue);
+		PlayAnimMontage(DashAnimation);
+
+		// Make sure we sweep check ("true") so we don't teleport through walls.
+		SetActorLocation(DashDestination, true);
 	}
-	else {
-		// Dash forward if not moving, so we at least do something when we hit Dash input.
-		DashDestination = Location + ForwardVector * DashDistance;
-	}
+	// Make sure we don't drain dash resource when we try to dash without having enough to do so!
+	if (DashResource >= DashCost)
+		DashResource -= DashCost;
+}
 
-	SpawnMovementParticles(Direction);
-	PlayAnimMontage(DashAnimation);
-
-	// Make sure we sweep check ("true") so we don't teleport through walls.
-	SetActorLocation(DashDestination, true);
+// -----------------------------------------------------------------------------------
+float AShooterCharacter::GetDashResourceAsPercentage() const
+{
+	return DashResource / DashResourceMax;
 }
 
 // -----------------------------------------------------------------------------------
@@ -217,8 +239,9 @@ void AShooterCharacter::Jump()
 
 	PlayAnimMontage(JumpAnimation);
 	// Ensure we don't continue to spawn particles when we can't double/triple jump anymore.
-	if (JumpCurrentCount < JumpMaxCount && JumpCurrentCount != 0)
-		SpawnMovementParticles(GetVelocity());
+	if (JumpCurrentCount < JumpMaxCount && JumpCurrentCount != 0) {
+		// TODO: Spawn jump particles.
+	}
 }
 
 // -----------------------------------------------------------------------------------
@@ -301,6 +324,7 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 		GetMesh()->SetSimulatePhysics(true);
 		GetMesh()->bPauseAnims = true;
+		Destroy();
 	}
 
 	// Return adjusted damage value if needed.
@@ -332,4 +356,10 @@ bool AShooterCharacter::IsDashing() const
 bool AShooterCharacter::IsJumping() const
 {
 	return bPressedJump;
+}
+
+// -----------------------------------------------------------------------------------
+float AShooterCharacter::GetCurrentHealthAsPercentage() const
+{
+	return Health / MaxHealth;
 }

@@ -67,6 +67,11 @@ public:
 	UFUNCTION(BlueprintPure)
 	bool IsJumping() const;
 
+	UFUNCTION(BlueprintPure)
+	float GetCurrentHealthAsPercentage() const;
+
+	UFUNCTION(BlueprintPure)
+	float GetDashResourceAsPercentage() const;
 
 	/// Perform basic attack.
 	void AttackBasic();
@@ -83,7 +88,9 @@ private:
 	void MoveRight(float AxisValue);
 	void LookUpRate(float AxisValue);
 	void LookRightRate(float AxisValue);
-	void SpawnMovementParticles(FVector Direction);
+	// ----------------------------------
+	// Dash and movement mechanics.
+	void SpawnMovementParticles(FVector Direction, float ForwardAxisInput, float StrafeAxisInput);
 	void Dash();
 	void DashSlowTime();
 	void ReturnToNormalTime() const;
@@ -96,6 +103,13 @@ private:
 	UPROPERTY()
 	AWorldSettings* WorldSettings;
 
+	UPROPERTY(EditAnywhere, Category="Movement")
+	float DashResourceMax = 4;
+	float DashResource;
+	UPROPERTY(EditAnywhere, Category="Movement")
+	float DashCost = 1;
+	UPROPERTY(EditAnywhere, Category="Movement")
+	float DashRefillRate = 1;
 	UPROPERTY(EditAnywhere, Category="Movement")
 	float DashDistance = 100;
 	UPROPERTY(EditAnywhere, Category="Movement")
@@ -114,13 +128,14 @@ private:
 
 	FVector DashDestination;
 
-	UPROPERTY(EditAnywhere, Category="View")
-	float RotationRate = 100;
-
 	// ----------------------------------
 	// Camera.
 	UPROPERTY()
 	USpringArmComponent* CameraSpringArm;
+
+	float CameraSpringArmLagSpeedDefault;
+	UPROPERTY(EditAnywhere, Category="View")
+	float CameraBackpedalSpeed = 8;
 
 	void SwapShoulder();
 	void MoveToShoulder(float DeltaTime);
@@ -130,6 +145,9 @@ private:
 	float LeftShoulderOffset;
 	UPROPERTY(EditAnywhere, Category="View")
 	float ShoulderSwapSpeed = 10;
+
+	UPROPERTY(EditAnywhere, Category="View")
+	float RotationRate = 100;
 
 	// ----------------------------------
 	// Attack stuff.

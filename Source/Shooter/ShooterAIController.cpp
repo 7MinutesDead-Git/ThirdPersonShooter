@@ -3,6 +3,7 @@
 
 #include "ShooterAIController.h"
 
+#include "ShooterCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -30,4 +31,16 @@ void AShooterAIController::BeginPlay()
 void AShooterAIController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+}
+
+// --------------------------------------------------------------
+/// Check IsDead from Character class.
+bool AShooterAIController::IsDead() const
+{
+	AShooterCharacter* AICharacter = Cast<AShooterCharacter>(GetPawn());
+	if (AICharacter) {
+		return AICharacter->IsDead();
+	}
+	// If we don't have a pawn (detached), then surely this controller is dead.
+	return true;
 }

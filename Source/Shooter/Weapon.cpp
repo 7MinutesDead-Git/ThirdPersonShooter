@@ -51,9 +51,12 @@ void AWeapon::AttackBasic()
 
 	// Attack particle effect.
 	UGameplayStatics::SpawnEmitterAttached(
-		WeaponFlash,		       // Emitter.
-		DragonSwordMesh,	       // Component to attach to.
-		TEXT("WeaponFlashSocket")  // Bone/Socket to attach to.
+		WeaponFlash,		        // Emitter.
+		DragonSwordMesh,	        // Component to attach to.
+		TEXT("WeaponFlashSocket"),  // Bone/Socket to attach to.
+		FVector::ZeroVector,		// Relative position.
+		FRotator::ZeroRotator,		// Relative rotation.
+		FVector(0.2, 0.2, 0.2)		// Scale.
 		);
 
 	// We want to shoot to where our view/camera is aiming.
@@ -89,34 +92,14 @@ void AWeapon::AttackBasic()
 ///	Recursively call itself again via TimerHandle to do next bounce.
 void AWeapon::BounceImpact(FVector Start, FVector Direction)
 {
-	// Then we travel out in a line from our ViewLocation in our ViewDirection, out to our max range.
-	FVector EndPoint = Start + Direction * MaxBasicAttackRange;
-
 	FHitResult Hit;
-	FCollisionQueryParams HitParameters;
-	// If indicating CollisionQueryParams, make sure we keep trace to complex.
-	HitParameters.bTraceComplex = true;
-	// Ensure we don't hit ourselves or our weapon.
-	HitParameters.AddIgnoredActor(this);
-	HitParameters.AddIgnoredActor(GetOwner());
-
-	bool HitSuccess = GetWorld()->LineTraceSingleByChannel(
-		OUT Hit,			   // Out hit info.
-		Start,		           // Start.
-		EndPoint,			   // End.
-		ECC_GameTraceChannel1, // Our "Bullet" channel is here, as shown in Config/DefaultEngine.ini
-		HitParameters		   // Collision Parameters (make sure we don't shoot ourselves).
-		);
+	bool HitSuccess = BounceLineTrace(Start, Direction, OUT Hit);
 
 	if (HitSuccess) {
 		// If we didn't hit a null actor, then deal damage to it.
 		DoDamage(Hit, Direction);
-
-		// Ricochet info that needs to be updated for additional BounceImpact() calls.
-		FVector MirrorImpact = FMath::GetReflectionVector(Direction, Hit.ImpactNormal);
-		RicochetRotation = MirrorImpact.Rotation();
-		RicochetDirection = RicochetRotation.Vector();
-		StartLocation = Hit.Location;
+		// Update ricochet info for additional BounceImpact() calls.
+		ReflectForNextBounce(Hit, Direction);
 
 		if (OwnerPawn && bToggleSelfRicochet) {
 			// Allows us to bounce into the walls, hopefully without going inside them.
@@ -142,25 +125,8 @@ void AWeapon::BounceImpact(FVector Start, FVector Direction)
 		// TODO: Have effect/emitter line travel from hand to impact point, then via bounces.
 		DrawDebugLine(GetWorld(), Start, Hit.ImpactPoint, FColor::Purple, false, 5);
 
-		// Setup timer delegate so we can make a sort of delayed ricochet bounce by calling this again.
-		// Recursive calls means updating the parameters/values with the new bind.
-		RicochetDelegate.BindUFunction(this, FName("BounceImpact"), StartLocation, RicochetDirection);
-
-		// Our recursive loop and base case.
-		if (RicochetBounces < RicochetMaxBounces) {
-			RicochetBounces += 1;
-			// Slowly speed up the bounces as we go on.
-			RicochetBounceDelay *= RicochetBounceSpeedGrowthFactor;
-			// Call this function again after a short delay, with updated parameters.
-			GetWorld()->GetTimerManager().SetTimer(RicochetTimerHandle, RicochetDelegate, RicochetBounceDelay, false);
-		}
-		else if (RicochetBounces == RicochetMaxBounces) {
-			if (OwnerCapsule)
-				OwnerCapsule->SetEnableGravity(true);
-			// The final explosion after all the bounces are done.
-			// TODO: Different sound effect.
-			// TODO: Different Explosion effect.
-		}
+		// Finally, do the next bounce.
+		DoNextBounceImpact();
 	}
 }
 
@@ -181,5 +147,65 @@ void AWeapon::DoDamage(FHitResult Hit, FVector Direction)
 			OwnerController, // Who instigated the damage (the controller who attacked with this Weapon).
 			this			 // What did the damage (this Weapon).
 			);
+	}
+}
+
+// ----------------------------------------------------------
+/// Do a line trace from starting point in given direction based on MaxBasicAttackRange. \n
+/// Hit results to OutHit. \n\n Return if hit was successful.
+bool AWeapon::BounceLineTrace(const FVector Start, const FVector Direction, FHitResult& OutHit)
+{
+	// Then we travel out in a line from our ViewLocation in our ViewDirection, out to our max range.
+	FVector EndPoint = Start + Direction * MaxBasicAttackRange;
+
+	FCollisionQueryParams HitParameters;
+	// If indicating CollisionQueryParams, make sure we keep trace to complex.
+	HitParameters.bTraceComplex = true;
+	// Ensure we don't hit ourselves or our weapon.
+	HitParameters.AddIgnoredActor(this);
+	HitParameters.AddIgnoredActor(GetOwner());
+
+	bool Hit = GetWorld()->LineTraceSingleByChannel(
+		OUT OutHit,			   // Out hit info.
+		Start,		           // Start.
+		EndPoint,			   // End.
+		ECC_GameTraceChannel1, // Our "Bullet" channel is here, as shown in Config/DefaultEngine.ini
+		HitParameters		   // Collision Parameters (make sure we don't shoot ourselves).
+		);
+
+	return Hit;
+}
+
+// ----------------------------------------------------------
+/// Update our ricochet bounce rotation, direction and start location with new reflection.
+void AWeapon::ReflectForNextBounce(const FHitResult Hit, const FVector Direction)
+{
+	// Ricochet info that needs to be updated for additional BounceImpact() calls.
+	FVector MirrorImpact = FMath::GetReflectionVector(Direction, Hit.ImpactNormal);
+	RicochetRotation = MirrorImpact.Rotation();
+	RicochetDirection = RicochetRotation.Vector();
+	StartLocation = Hit.Location;
+}
+
+// ----------------------------------------------------------
+/// Subsequent recursive calls to BounceImpact() with Timer Delegates. \n\n
+/// End bounces once maximum bounce count has been reached.
+void AWeapon::DoNextBounceImpact()
+{
+	// Setup timer delegate so we can make a sort of delayed ricochet bounce by calling this again.
+	// Recursive calls means updating the parameters/values with the new bind.
+	RicochetDelegate.BindUFunction(this, FName("BounceImpact"), StartLocation, RicochetDirection);
+
+	// Our recursive loop and base case.
+	if (RicochetBounces < RicochetMaxBounces) {
+		RicochetBounces += 1;
+		// Slowly speed up the bounces as we go on.
+		RicochetBounceDelay *= RicochetBounceSpeedGrowthFactor;
+		// Call this function again after a short delay, with updated parameters.
+		GetWorld()->GetTimerManager().SetTimer(RicochetTimerHandle, RicochetDelegate, RicochetBounceDelay, false);
+	}
+	else if (RicochetBounces == RicochetMaxBounces) {
+		// TODO: Different sound effect.
+		// TODO: Different Explosion effect.
 	}
 }
