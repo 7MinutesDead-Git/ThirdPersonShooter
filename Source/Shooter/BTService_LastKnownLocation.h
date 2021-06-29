@@ -6,9 +6,7 @@
 #include "BehaviorTree/Services/BTService_BlackboardBase.h"
 #include "BTService_LastKnownLocation.generated.h"
 
-/**
- *
- */
+// -------------------------------------
 UCLASS()
 class SHOOTER_API UBTService_LastKnownLocation : public UBTService_BlackboardBase
 {

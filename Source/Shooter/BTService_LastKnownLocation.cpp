@@ -7,13 +7,13 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-// ------------------------------------------------------------
+// -------------------------------------
 UBTService_LastKnownLocation::UBTService_LastKnownLocation()
 {
 	NodeName = TEXT("Update Known Player Location if LOS");
 }
 
-// ------------------------------------------------------------
+// -------------------------------------
 void UBTService_LastKnownLocation::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);

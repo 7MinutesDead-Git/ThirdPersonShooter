@@ -1,9 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "ShooterPlayerController.h"
 #include "Blueprint/UserWidget.h"
 
+// -------------------------------------
 void AShooterPlayerController::BeginPlay()
 {
 	HUD = CreateWidget(this, PlayerHUD);
@@ -12,6 +10,7 @@ void AShooterPlayerController::BeginPlay()
 	}
 }
 
+// -------------------------------------
 void AShooterPlayerController::GameHasEnded(AActor* EndGameFocus, bool bIsWinner)
 {
 	Super::GameHasEnded(EndGameFocus, bIsWinner);

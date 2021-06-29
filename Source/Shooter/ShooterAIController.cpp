@@ -9,7 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 
 
-// --------------------------------------------------------------
+// -------------------------------------
 void AShooterAIController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -27,13 +27,13 @@ void AShooterAIController::BeginPlay()
 }
 
 
-// --------------------------------------------------------------
+// -------------------------------------
 void AShooterAIController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 }
 
-// --------------------------------------------------------------
+// -------------------------------------
 /// Check IsDead from Character class.
 bool AShooterAIController::IsDead() const
 {

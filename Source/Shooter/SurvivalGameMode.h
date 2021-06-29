@@ -6,9 +6,7 @@
 #include "ShooterGameModeBase.h"
 #include "SurvivalGameMode.generated.h"
 
-/**
- *
- */
+// -------------------------------------
 UCLASS()
 class SHOOTER_API ASurvivalGameMode : public AShooterGameModeBase
 {

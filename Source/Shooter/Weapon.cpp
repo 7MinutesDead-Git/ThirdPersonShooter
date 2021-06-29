@@ -10,7 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 
 
-// ----------------------------------------------------------
+// -------------------------------------
 /// Sets default values for AWeapon class. -7MD
 AWeapon::AWeapon()
 {
@@ -23,7 +23,7 @@ AWeapon::AWeapon()
 	DragonSwordMesh->SetupAttachment(Root);
 }
 
-// ----------------------------------------------------------
+// -------------------------------------
 // Called when the game starts or when spawned
 void AWeapon::BeginPlay()
 {
@@ -31,7 +31,7 @@ void AWeapon::BeginPlay()
 	RicochetBounceDelay = RicochetBounceStartDelay;
 }
 
-// ----------------------------------------------------------
+// -------------------------------------
 // Called every frame
 void AWeapon::Tick(float DeltaTime)
 {
@@ -39,7 +39,7 @@ void AWeapon::Tick(float DeltaTime)
 
 }
 
-// ----------------------------------------------------------
+// -------------------------------------
 /// Perform the basic attack with this weapon. -7MD
 void AWeapon::AttackBasic()
 {
@@ -83,7 +83,7 @@ void AWeapon::AttackBasic()
 	BounceImpact(StartLocation, RicochetDirection);
 }
 
-// ----------------------------------------------------------
+// -------------------------------------
 /// Line trace to hit target.\n
 /// Ricochet emitter rotation across hit surface.\n
 ///	Update StartDirection and RicochetDirection. \n
@@ -126,7 +126,7 @@ void AWeapon::BounceImpact(FVector Start, FVector Direction)
 	}
 }
 
-// ----------------------------------------------------------
+// -------------------------------------
 /// Deal damage to the actor hit, if actor is not null. -7MD
 void AWeapon::DoDamage(FHitResult Hit, FVector Direction)
 {
@@ -146,7 +146,7 @@ void AWeapon::DoDamage(FHitResult Hit, FVector Direction)
 	}
 }
 
-// ----------------------------------------------------------
+// -------------------------------------
 /// Do a line trace from starting point in given direction based on MaxBasicAttackRange. \n
 /// Hit results to OutHit. \n\n Return if hit was successful.
 bool AWeapon::BounceLineTrace(const FVector Start, const FVector Direction, FHitResult& OutHit)
@@ -172,7 +172,7 @@ bool AWeapon::BounceLineTrace(const FVector Start, const FVector Direction, FHit
 	return Hit;
 }
 
-// ----------------------------------------------------------
+// -------------------------------------
 /// Update our ricochet bounce rotation, direction and start location with new reflection.
 void AWeapon::ReflectForNextBounce(const FHitResult Hit, const FVector Direction)
 {
@@ -183,7 +183,7 @@ void AWeapon::ReflectForNextBounce(const FHitResult Hit, const FVector Direction
 	StartLocation = Hit.Location;
 }
 
-// ----------------------------------------------------------
+// -------------------------------------
 /// Subsequent recursive calls to BounceImpact() with Timer Delegate. \n\n
 /// End bounces once maximum bounce count has been reached.
 void AWeapon::DoNextBounceImpact()

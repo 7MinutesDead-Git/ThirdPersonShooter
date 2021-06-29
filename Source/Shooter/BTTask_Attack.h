@@ -6,9 +6,7 @@
 #include "BehaviorTree/BTTaskNode.h"
 #include "BTTask_Attack.generated.h"
 
-/**
- *
- */
+// -------------------------------------
 UCLASS()
 class SHOOTER_API UBTTask_Attack : public UBTTaskNode
 {

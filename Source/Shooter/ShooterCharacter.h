@@ -7,12 +7,12 @@
 
 #include "ShooterCharacter.generated.h"
 
-// ---------------------------------------------------------------
+// -------------------------------------
 // Forward Declarations.
 class AWeapon;
 class USpringArmComponent;
 
-// ---------------------------------------------------------------
+// -------------------------------------
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
 {

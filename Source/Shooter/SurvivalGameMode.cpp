@@ -11,7 +11,7 @@
 #include "ShooterAIController.h"
 
 
-// ----------------------------------------------------------
+// -------------------------------------
 void ASurvivalGameMode::PawnKilled(APawn* PawnKilled)
 {
 	Super::PawnKilled(PawnKilled);
@@ -33,7 +33,7 @@ void ASurvivalGameMode::PawnKilled(APawn* PawnKilled)
 	EndGame(true);
 }
 
-// ----------------------------------------------------------
+// -------------------------------------
 void ASurvivalGameMode::EndGame(bool PlayerIsWinner)
 {
 	// Slow down time when game ends.

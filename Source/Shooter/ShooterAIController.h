@@ -7,11 +7,11 @@
 #include "ShooterAIController.generated.h"
 
 
-// --------------------------------------------------------------
+// -------------------------------------
 class UBlackboardComponent;
 class UCharacterMovementComponent;
 
-// --------------------------------------------------------------
+// -------------------------------------
 UCLASS()
 class SHOOTER_API AShooterAIController : public AAIController
 {

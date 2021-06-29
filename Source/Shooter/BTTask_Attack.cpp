@@ -6,14 +6,14 @@
 #include "AIController.h"
 #include "ShooterCharacter.h"
 
-// ----------------------------------------------------------------
+// -------------------------------------
 UBTTask_Attack::UBTTask_Attack()
 {
 	// Give a name to this BT Node so we know what it is in the editor.
 	NodeName = TEXT("Attack Task");
 }
 
-// ----------------------------------------------------------------
+// -------------------------------------
 // Ran once task is called by the behavior tree.
 EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {

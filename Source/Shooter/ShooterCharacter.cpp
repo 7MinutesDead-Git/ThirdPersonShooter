@@ -9,7 +9,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 // Sets default values
 AShooterCharacter::AShooterCharacter()
 {
@@ -18,7 +18,7 @@ AShooterCharacter::AShooterCharacter()
 
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 // Called when the game starts or when spawned.
 void AShooterCharacter::BeginPlay()
 {
@@ -30,7 +30,7 @@ void AShooterCharacter::BeginPlay()
 	SetupPlayerResources();
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
@@ -38,7 +38,7 @@ void AShooterCharacter::Tick(float DeltaTime)
 	MoveCameraToShoulder(DeltaTime);
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 // Called to bind functionality to input
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -65,7 +65,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction(TEXT("AttackBasic"), IE_Pressed, this, &AShooterCharacter::AttackBasic);
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 void AShooterCharacter::SetupPlayerResources()
 {
 	Health = MaxHealth;
@@ -73,7 +73,7 @@ void AShooterCharacter::SetupPlayerResources()
 	bDashResourceFull = true;
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 void AShooterCharacter::SetupPlayerCamera()
 {
 	// Get reference to the spring arm so we can shoulder swap.
@@ -85,7 +85,7 @@ void AShooterCharacter::SetupPlayerCamera()
 	LeftShoulderOffset = RightShoulderOffset * -1;
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 void AShooterCharacter::SetupWeapon()
 {
 	// Since our mesh has a sword already, we need to hide it.
@@ -101,7 +101,7 @@ void AShooterCharacter::SetupWeapon()
 	Weapon->SetOwner(this);
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 void AShooterCharacter::MoveFoward(float AxisValue)
 {
 	AddMovementInput(GetActorForwardVector() * AxisValue);
@@ -114,13 +114,13 @@ void AShooterCharacter::MoveFoward(float AxisValue)
 	}
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 void AShooterCharacter::MoveRight(float AxisValue)
 {
 	AddMovementInput(GetActorRightVector() * AxisValue);
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 /// Framerate-independent implementation of AddControllerPitchInput, for joysticks/axis.
 void AShooterCharacter::LookUpRate(float AxisValue)
 {
@@ -130,14 +130,14 @@ void AShooterCharacter::LookUpRate(float AxisValue)
 	AddControllerPitchInput(AxisValue * RotationRate * GetWorld()->GetDeltaSeconds());
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 /// Framerate-independent implementation of AddControllerYawInput, for joysticks/axis.
 void AShooterCharacter::LookRightRate(float AxisValue)
 {
 	AddControllerYawInput(AxisValue * RotationRate * GetWorld()->GetDeltaSeconds());
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 /// Spawn particles related to movement, both on character and at origin of movement.
 void AShooterCharacter::SpawnMovementParticles(const FVector Direction, const float ForwardAxisInput, const float StrafeAxisInput)
 {
@@ -177,7 +177,7 @@ void AShooterCharacter::SpawnMovementParticles(const FVector Direction, const fl
 		);
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 /// Dash/teleport in intended move direction based on WASD input, or forward if standing still.
 /// Very Tracer baby.
 void AShooterCharacter::Dash()
@@ -217,7 +217,7 @@ void AShooterCharacter::Dash()
 	}
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 /// Replenish DashCost, and play notification sound. If resource is full, play different sound.
 void AShooterCharacter::CooldownDash()
 {
@@ -234,17 +234,17 @@ void AShooterCharacter::CooldownDash()
 	}
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 /// Start Timer for current Dash. Regenerate dash cost after timer. \n
 /// Allows for concurrent dash cooldowns for each available dash.
 void AShooterCharacter::GenerateCooldownDashTimer()
 {
-	const int CurrentDashSlot = DashResourceMax - DashResource;
-	FTimerHandle CurrentDashCooldownTimer = GetWorldTimerManager().GenerateHandle(CurrentDashSlot);
-	GetWorldTimerManager().SetTimer(CurrentDashCooldownTimer, this, &AShooterCharacter::CooldownDash, DashCooldownRate, false);
+	const int DashIndex = DashResourceMax - DashResource;
+	FTimerHandle CooldownTimer = GetWorldTimerManager().GenerateHandle(DashIndex);
+	GetWorldTimerManager().SetTimer(CooldownTimer, this, &AShooterCharacter::CooldownDash, DashCooldownRate, false);
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 /// Slow motion when we dash. Return to normal time after delay.
 void AShooterCharacter::DashSlowTime()
 {
@@ -255,14 +255,14 @@ void AShooterCharacter::DashSlowTime()
 	}
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 /// Reset time dilation to 1.
 void AShooterCharacter::ReturnToNormalTime() const
 {
 	WorldSettings->SetTimeDilation(1);
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 // Overriding to do extra stuff when we jump.
 void AShooterCharacter::Jump()
 {
@@ -275,7 +275,7 @@ void AShooterCharacter::Jump()
 	}
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 /// Swap over-the-shoulder view between left and right, toggled by input.
 void AShooterCharacter::SwapShoulder()
 {
@@ -289,7 +289,7 @@ void AShooterCharacter::SwapShoulder()
 	}
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 /// Interpolate towards desired shoulder offset.
 void AShooterCharacter::MoveCameraToShoulder(float DeltaTime)
 {
@@ -303,7 +303,7 @@ void AShooterCharacter::MoveCameraToShoulder(float DeltaTime)
 	}
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 /// Perform a basic attack with the currently held weapon.
 void AShooterCharacter::AttackBasic()
 {
@@ -322,7 +322,7 @@ void AShooterCharacter::AttackBasic()
 		);
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 /// Set Attacking to false and stop animations.
 void AShooterCharacter::StopAttacking()
 {
@@ -330,7 +330,7 @@ void AShooterCharacter::StopAttacking()
 	StopAnimMontage(AttackAnimation);
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
 	AActor* DamageCauser)
 {
@@ -362,7 +362,7 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 	return DamageApplied;
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 bool AShooterCharacter::IsDead() const
 {
 	if (Health <= 0) {
@@ -371,31 +371,31 @@ bool AShooterCharacter::IsDead() const
 	return false;
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 bool AShooterCharacter::IsAttacking() const
 {
 	return bAttacking;
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 bool AShooterCharacter::IsDashing() const
 {
 	return bDashing;
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 bool AShooterCharacter::IsJumping() const
 {
 	return bPressedJump;
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 float AShooterCharacter::GetCurrentHealthAsPercentage() const
 {
 	return Health / MaxHealth;
 }
 
-// -----------------------------------------------------------------------------------
+// -------------------------------------
 float AShooterCharacter::GetDashResourceAsPercentage() const
 {
 	float Resource = static_cast<float>(DashResource);

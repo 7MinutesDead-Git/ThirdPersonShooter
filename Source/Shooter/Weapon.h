@@ -8,6 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
+// -------------------------------------
 UCLASS()
 class SHOOTER_API AWeapon : public AActor
 {
@@ -16,7 +17,6 @@ class SHOOTER_API AWeapon : public AActor
 public:
 	// Sets default values for this actor's properties
 	AWeapon();
-
 	void AttackBasic();
 
 protected:
