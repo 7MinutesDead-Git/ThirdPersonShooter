@@ -25,33 +25,9 @@ void AShooterCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	WorldSettings = GetWorldSettings();
-
-	// Camera setup -------------------------------------------
-	// Get reference to the spring arm so we can shoulder swap.
-	CameraSpringArm = Cast<USpringArmComponent>(GetComponentByClass(USpringArmComponent::StaticClass()));
-	CameraSpringArmLagSpeedDefault = CameraSpringArm->CameraLagSpeed;
-	// As long as the spring arm in the BP is centered around the player,
-	// we can just multiply it's existing offset by -1 to swap it.
-	RightShoulderOffset = CameraSpringArm->SocketOffset.Y;
-	LeftShoulderOffset = RightShoulderOffset * -1;
-
-	// Weapon setup -------------------------------------------
-	// Since our mesh has a sword already, we need to hide it.
-	// It's attached to the bone "weapon_r" in the skeleton.
-	// We made a new socket in it's place in the editor named WeaponSocket.
-	GetMesh()->HideBoneByName(TEXT("weapon_r"), PBO_None);
-	// Create our custom weapon to equip.
-	Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass);
-	// Attach it to this mesh's WeaponSocket (our player), and keep relative transform to bone.
-	Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("WeaponSocket"));
-	// Setting ownership here is relevant for multiplayer and damage.
-	// This means the weapon is also aware of the character, so references can be retrieved too!
-	Weapon->SetOwner(this);
-
-	// Player resources setup. --------------------------------
-	Health = MaxHealth;
-	DashResource = DashResourceMax;
-
+	SetupPlayerCamera();
+	SetupWeapon();
+	SetupPlayerResources();
 }
 
 // -----------------------------------------------------------------------------------
@@ -59,11 +35,7 @@ void AShooterCharacter::BeginPlay()
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	// Smooth shoulder swapping.
-	MoveToShoulder(DeltaTime);
-	// Replenish Dash resource over time, clamped between 0 and DashResourceMax.
-	DashResource = FMath::Clamp<float>(DashResource + (DashRefillRate * DeltaTime), 0, DashResourceMax);
+	MoveCameraToShoulder(DeltaTime);
 }
 
 // -----------------------------------------------------------------------------------
@@ -94,10 +66,45 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 }
 
 // -----------------------------------------------------------------------------------
+void AShooterCharacter::SetupPlayerResources()
+{
+	Health = MaxHealth;
+	DashResource = DashResourceMax;
+	bDashResourceFull = true;
+}
+
+// -----------------------------------------------------------------------------------
+void AShooterCharacter::SetupPlayerCamera()
+{
+	// Get reference to the spring arm so we can shoulder swap.
+	CameraSpringArm = Cast<USpringArmComponent>(GetComponentByClass(USpringArmComponent::StaticClass()));
+	CameraSpringArmLagSpeedDefault = CameraSpringArm->CameraLagSpeed;
+	// As long as the spring arm in the BP is centered around the player,
+	// we can just multiply it's existing offset by -1 to swap it.
+	RightShoulderOffset = CameraSpringArm->SocketOffset.Y;
+	LeftShoulderOffset = RightShoulderOffset * -1;
+}
+
+// -----------------------------------------------------------------------------------
+void AShooterCharacter::SetupWeapon()
+{
+	// Since our mesh has a sword already, we need to hide it.
+	// It's attached to the bone "weapon_r" in the skeleton.
+	// We made a new socket in it's place in the editor named WeaponSocket.
+	GetMesh()->HideBoneByName(TEXT("weapon_r"), PBO_None);
+	// Create our custom weapon to equip.
+	Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass);
+	// Attach it to this mesh's WeaponSocket (our player), and keep relative transform to bone.
+	Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("WeaponSocket"));
+	// Setting ownership here is relevant for multiplayer and damage.
+	// This means the weapon is also aware of the character, so references can be retrieved too!
+	Weapon->SetOwner(this);
+}
+
+// -----------------------------------------------------------------------------------
 void AShooterCharacter::MoveFoward(float AxisValue)
 {
 	AddMovementInput(GetActorForwardVector() * AxisValue);
-
 	// So the character doesn't disappear from view when backpedaling or teleporting backwards too fast.
 	if (AxisValue < 0) {
 		CameraSpringArm->CameraLagSpeed = CameraBackpedalSpeed;
@@ -177,7 +184,6 @@ void AShooterCharacter::Dash()
 {
 	if (DashResource >= DashCost) {
 		DashSlowTime();
-
 		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), DashSound, GetActorLocation());
 
 		const float ForwardValue = GetInputAxisValue("MoveForward");
@@ -202,15 +208,40 @@ void AShooterCharacter::Dash()
 		// Make sure we sweep check ("true") so we don't teleport through walls.
 		SetActorLocation(DashDestination, true);
 	}
-	// Make sure we don't drain dash resource when we try to dash without having enough to do so!
-	if (DashResource >= DashCost)
+	// Make sure we don't drain dash resource when we try to dash without having enough to dash!
+	if (DashResource >= DashCost) {
+		bDashResourceFull = false;
 		DashResource -= DashCost;
+		// Replenish DashCost after timer.
+		GenerateCooldownDashTimer();
+	}
 }
 
 // -----------------------------------------------------------------------------------
-float AShooterCharacter::GetDashResourceAsPercentage() const
+/// Replenish DashCost, and play notification sound. If resource is full, play different sound.
+void AShooterCharacter::CooldownDash()
 {
-	return DashResource / DashResourceMax;
+	DashResource += DashCost;
+
+	if (DashResource >= DashResourceMax && !bDashResourceFull) {
+		bDashResourceFull = true;
+		// UGameplayStatics::PlaySound2D();
+		UE_LOG(LogTemp, Warning, TEXT("Dash full."));
+	}
+	else {
+		// UGameplayStatics::PlaySound2D();
+		UE_LOG(LogTemp, Warning, TEXT("Dash up."));
+	}
+}
+
+// -----------------------------------------------------------------------------------
+/// Start Timer for current Dash. Regenerate dash cost after timer. \n
+/// Allows for concurrent dash cooldowns for each available dash.
+void AShooterCharacter::GenerateCooldownDashTimer()
+{
+	const int CurrentDashSlot = DashResourceMax - DashResource;
+	FTimerHandle CurrentDashCooldownTimer = GetWorldTimerManager().GenerateHandle(CurrentDashSlot);
+	GetWorldTimerManager().SetTimer(CurrentDashCooldownTimer, this, &AShooterCharacter::CooldownDash, DashCooldownRate, false);
 }
 
 // -----------------------------------------------------------------------------------
@@ -260,7 +291,7 @@ void AShooterCharacter::SwapShoulder()
 
 // -----------------------------------------------------------------------------------
 /// Interpolate towards desired shoulder offset.
-void AShooterCharacter::MoveToShoulder(float DeltaTime)
+void AShooterCharacter::MoveCameraToShoulder(float DeltaTime)
 {
 	float CurrentPos = CameraSpringArm->SocketOffset.Y;
 
@@ -277,7 +308,7 @@ void AShooterCharacter::MoveToShoulder(float DeltaTime)
 void AShooterCharacter::AttackBasic()
 {
 	Weapon->AttackBasic();
-	Attacking = true;
+	bAttacking = true;
 
 	PlayAnimMontage(AttackAnimation);
 
@@ -295,7 +326,7 @@ void AShooterCharacter::AttackBasic()
 /// Set Attacking to false and stop animations.
 void AShooterCharacter::StopAttacking()
 {
-	Attacking = false;
+	bAttacking = false;
 	StopAnimMontage(AttackAnimation);
 }
 
@@ -343,13 +374,13 @@ bool AShooterCharacter::IsDead() const
 // -----------------------------------------------------------------------------------
 bool AShooterCharacter::IsAttacking() const
 {
-	return Attacking;
+	return bAttacking;
 }
 
 // -----------------------------------------------------------------------------------
 bool AShooterCharacter::IsDashing() const
 {
-	return Dashing;
+	return bDashing;
 }
 
 // -----------------------------------------------------------------------------------
@@ -362,4 +393,12 @@ bool AShooterCharacter::IsJumping() const
 float AShooterCharacter::GetCurrentHealthAsPercentage() const
 {
 	return Health / MaxHealth;
+}
+
+// -----------------------------------------------------------------------------------
+float AShooterCharacter::GetDashResourceAsPercentage() const
+{
+	float Resource = static_cast<float>(DashResource);
+	float Max = static_cast<float>(DashResourceMax);
+	return Resource / Max;
 }

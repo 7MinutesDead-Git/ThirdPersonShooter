@@ -80,8 +80,12 @@ public:
 private:
 	// ----------------------------------
 	// State.
-	bool Attacking;
-	bool Dashing;
+	bool bAttacking;
+	bool bDashing;
+	bool bDashResourceFull;
+	void SetupPlayerResources();
+	void SetupPlayerCamera();
+	void SetupWeapon();
 	// ----------------------------------
 	// Control.
 	void MoveFoward(float AxisValue);
@@ -92,11 +96,14 @@ private:
 	// Dash and movement mechanics.
 	void SpawnMovementParticles(FVector Direction, float ForwardAxisInput, float StrafeAxisInput);
 	void Dash();
+	void CooldownDash();
+	void GenerateCooldownDashTimer();
 	void DashSlowTime();
 	void ReturnToNormalTime() const;
 	virtual void Jump() override;
 
 	FTimerHandle DashSlowTimeTimer;
+	FTimerHandle DashCooldownTimer;
 	FRotator DashParticleRotation;
 	FRotator DashParticleAttachedRotation;
 
@@ -104,12 +111,12 @@ private:
 	AWorldSettings* WorldSettings;
 
 	UPROPERTY(EditAnywhere, Category="Movement")
-	float DashResourceMax = 4;
-	float DashResource;
+	int DashResourceMax = 5;
+	int DashResource;
 	UPROPERTY(EditAnywhere, Category="Movement")
-	float DashCost = 1;
+	int DashCost = 1;
 	UPROPERTY(EditAnywhere, Category="Movement")
-	float DashRefillRate = 1;
+	float DashCooldownRate = 1;
 	UPROPERTY(EditAnywhere, Category="Movement")
 	float DashDistance = 100;
 	UPROPERTY(EditAnywhere, Category="Movement")
@@ -119,6 +126,10 @@ private:
 
 	UPROPERTY(EditAnywhere, Category="Effects")
 	USoundBase* DashSound;
+	UPROPERTY(EditAnywhere, Category="Effects")
+	USoundBase* DashAvailableSound;
+	UPROPERTY(EditAnywhere, Category="Effects")
+	USoundBase* MaxDashSound;
 	UPROPERTY(EditAnywhere, Category="Effects")
 	UParticleSystem* DashParticleEffect;
 	UPROPERTY(EditAnywhere, Category="Effects")
@@ -138,7 +149,7 @@ private:
 	float CameraBackpedalSpeed = 8;
 
 	void SwapShoulder();
-	void MoveToShoulder(float DeltaTime);
+	void MoveCameraToShoulder(float DeltaTime);
 
 	bool bRightShoulder = true;
 	float RightShoulderOffset;

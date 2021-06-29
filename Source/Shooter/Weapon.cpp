@@ -71,10 +71,8 @@ void AWeapon::AttackBasic()
 	OwnerController->GetPlayerViewPoint(OUT StartLocation, OUT StartRotation);
 
 	if (bToggleSelfRicochet) {
-		// Should disable gravity while pawn is bouncing around.
-		OwnerCapsule = Cast<UCapsuleComponent>(OwnerPawn->GetComponentByClass(UCapsuleComponent::StaticClass()));
-		if (OwnerCapsule)
-			OwnerCapsule->SetEnableGravity(false);
+		// TODO: Disable gravity on player while bouncing around.
+		// TODO: Add impulse for extra disorientation.
 	}
 
 	// Direction that points from the rotation.
@@ -112,15 +110,13 @@ void AWeapon::BounceImpact(FVector Start, FVector Direction)
 
 		// Spawn particles!
 		UGameplayStatics::SpawnEmitterAtLocation(
-			GetWorld(),		   // World context.
-			WeaponFlash,	   // Particle emitter.
-			Hit.ImpactPoint,   // Location.
-			RicochetRotation,  // Rotation.
-			ImpactEffectScale  // Scale.
-		);
+			GetWorld(), WeaponFlash, Hit.ImpactPoint, RicochetRotation, ImpactEffectScale
+			);
 
 		// Play sound!
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitImpactSound, Hit.ImpactPoint, FRotator::ZeroRotator);
+		UGameplayStatics::PlaySoundAtLocation(
+			GetWorld(), HitImpactSound, Hit.ImpactPoint, FRotator::ZeroRotator
+			);
 
 		// TODO: Have effect/emitter line travel from hand to impact point, then via bounces.
 		DrawDebugLine(GetWorld(), Start, Hit.ImpactPoint, FColor::Purple, false, 5);
@@ -188,7 +184,7 @@ void AWeapon::ReflectForNextBounce(const FHitResult Hit, const FVector Direction
 }
 
 // ----------------------------------------------------------
-/// Subsequent recursive calls to BounceImpact() with Timer Delegates. \n\n
+/// Subsequent recursive calls to BounceImpact() with Timer Delegate. \n\n
 /// End bounces once maximum bounce count has been reached.
 void AWeapon::DoNextBounceImpact()
 {
