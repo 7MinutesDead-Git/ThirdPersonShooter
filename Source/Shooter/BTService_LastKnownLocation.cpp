@@ -26,12 +26,11 @@ void UBTService_LastKnownLocation::TickNode(UBehaviorTreeComponent& OwnerComp, u
 	// Being more verbose here so I can remember what's going on.
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 	FName PlayerLocationKey = GetSelectedBlackboardKey();
-	FVector PlayerLocation = Player->GetActorLocation();
 
 	bool CanSeePlayer = OwnerComp.GetAIOwner()->LineOfSightTo(Player);
 
 	if (CanSeePlayer) {
-		BB->SetValueAsVector(PlayerLocationKey, PlayerLocation);
+		BB->SetValueAsObject(PlayerLocationKey, Player);
 	}
 	else {
 		BB->ClearValue(PlayerLocationKey);

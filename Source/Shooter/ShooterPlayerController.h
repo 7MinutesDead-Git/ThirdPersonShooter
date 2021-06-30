@@ -27,6 +27,7 @@ private:
 	TSubclassOf<UUserWidget> WinSummaryUI;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UUserWidget> PlayerHUD;
+	UPROPERTY()
 	UUserWidget* HUD;
 	UPROPERTY(EditAnywhere)
 	float RestartDelay = 2;

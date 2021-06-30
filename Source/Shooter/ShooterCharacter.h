@@ -80,8 +80,9 @@ public:
 private:
 	// ----------------------------------
 	// State.
-	bool bAttacking;
-	bool bDashing;
+	bool bJumping = false;
+	bool bAttacking = false;
+	bool bDashing = false;
 	bool bDashResourceFull;
 	void SetupPlayerResources();
 	void SetupPlayerCamera();
@@ -101,6 +102,8 @@ private:
 	void DashSlowTime();
 	void ReturnToNormalTime() const;
 	virtual void Jump() override;
+	virtual void Landed(const FHitResult& Hit) override;
+	void ReJump();
 
 	FTimerHandle DashSlowTimeTimer;
 	FTimerHandle DashCooldownTimer;
@@ -193,3 +196,9 @@ private:
 	UAnimMontage* HitAnimation;
 
 };
+
+
+inline void AShooterCharacter::ReJump()
+{
+	bJumping = true;
+}

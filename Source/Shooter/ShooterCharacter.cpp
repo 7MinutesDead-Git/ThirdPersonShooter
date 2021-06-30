@@ -268,12 +268,24 @@ void AShooterCharacter::ReturnToNormalTime() const
 void AShooterCharacter::Jump()
 {
 	Super::Jump();
+	bJumping = true;
 
-	PlayAnimMontage(JumpAnimation);
 	// Ensure we don't continue to spawn particles when we can't double/triple jump anymore.
 	if (JumpCurrentCount < JumpMaxCount && JumpCurrentCount != 0) {
 		// TODO: Spawn jump particles.
+		// TODO: Come up with better solution for retriggering jump animation while in air.
+		// Retrigger jump animation for double jumps.
+		bJumping = false;
+		FTimerHandle Rejump;
+		GetWorldTimerManager().SetTimer(Rejump, this, &AShooterCharacter::ReJump, 0.1f);
+
 	}
+}
+
+void AShooterCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+	bJumping = false;
 }
 
 // -------------------------------------
@@ -387,7 +399,7 @@ bool AShooterCharacter::IsDashing() const
 // -------------------------------------
 bool AShooterCharacter::IsJumping() const
 {
-	return bPressedJump;
+	return bJumping;
 }
 
 // -------------------------------------
