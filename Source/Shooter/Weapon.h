@@ -35,6 +35,9 @@ private:
 	bool BounceLineTrace(FVector Start, FVector Direction, FHitResult& OutHit);
 	void ReflectForNextBounce(const FHitResult Hit, const FVector Direction);
 	void DoNextBounceImpact();
+	void GetAttackStartValues();
+	void PlayAttackSound();
+	void SpawnAttackParticleFX();
 
 	FVector StartLocation;
 	FRotator StartRotation;

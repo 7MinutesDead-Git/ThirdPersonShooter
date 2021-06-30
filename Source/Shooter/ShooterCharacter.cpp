@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// This has all the good stuff for the player character.
 
 
 #include "ShooterCharacter.h"
@@ -10,7 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 
 // -------------------------------------
-// Sets default values
+// Sets default values.
 AShooterCharacter::AShooterCharacter()
 {
 	// Set to false if tick is not needed.
@@ -31,7 +31,7 @@ void AShooterCharacter::BeginPlay()
 }
 
 // -------------------------------------
-// Called every frame
+// Called every frame.
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -39,7 +39,7 @@ void AShooterCharacter::Tick(float DeltaTime)
 }
 
 // -------------------------------------
-// Called to bind functionality to input
+// Called to bind functionality to input.
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -79,7 +79,7 @@ void AShooterCharacter::SetupPlayerCamera()
 	// Get reference to the spring arm so we can shoulder swap.
 	CameraSpringArm = Cast<USpringArmComponent>(GetComponentByClass(USpringArmComponent::StaticClass()));
 	CameraSpringArmLagSpeedDefault = CameraSpringArm->CameraLagSpeed;
-	// As long as the spring arm in the BP is centered around the player,
+	// As long as the spring arm in the BP is centered on the player mesh,
 	// we can just multiply it's existing offset by -1 to swap it.
 	RightShoulderOffset = CameraSpringArm->SocketOffset.Y;
 	LeftShoulderOffset = RightShoulderOffset * -1;
@@ -239,6 +239,7 @@ void AShooterCharacter::CooldownDash()
 /// Allows for concurrent dash cooldowns for each available dash.
 void AShooterCharacter::GenerateCooldownDashTimer()
 {
+	// Setting it up this way means we can keep the same logic for any amount of dashes.
 	const int DashIndex = DashResourceMax - DashResource;
 	FTimerHandle CooldownTimer = GetWorldTimerManager().GenerateHandle(DashIndex);
 	GetWorldTimerManager().SetTimer(CooldownTimer, this, &AShooterCharacter::CooldownDash, DashCooldownRate, false);

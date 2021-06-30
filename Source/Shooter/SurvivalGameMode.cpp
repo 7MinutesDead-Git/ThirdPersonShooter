@@ -44,6 +44,6 @@ void ASurvivalGameMode::EndGame(bool PlayerIsWinner)
 		// See notes at top.*
 		bool IsWinner = Controller->IsPlayerController() == PlayerIsWinner;
 		// Focus camera on this pawn.
-		Controller->GameHasEnded(Controller, IsWinner);
+		Controller->GameHasEnded(nullptr, IsWinner);
 	}
 }

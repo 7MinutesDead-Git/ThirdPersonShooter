@@ -5,7 +5,6 @@
 
 #include "DrawDebugHelpers.h"
 #include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "Field/FieldSystemNodes.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -40,52 +39,19 @@ void AWeapon::Tick(float DeltaTime)
 }
 
 // -------------------------------------
-/// Perform the basic attack with this weapon. -7MD
+/// Perform the basic attack with this weapon.
 void AWeapon::AttackBasic()
 {
 	RicochetBounceDelay = RicochetBounceStartDelay;
 	RicochetBounces = 0;
-
-	// Attack Sound.
-	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FinalHitExplosionSound, GetActorLocation(), FRotator::ZeroRotator);
-
-	// Attack particle effect.
-	UGameplayStatics::SpawnEmitterAttached(
-		WeaponFlash,		        // Emitter.
-		DragonSwordMesh,	        // Component to attach to.
-		TEXT("WeaponFlashSocket"),  // Bone/Socket to attach to.
-		FVector::ZeroVector,		// Relative position.
-		FRotator::ZeroRotator,		// Relative rotation.
-		FVector(0.2, 0.2, 0.2)		// Scale.
-		);
-
-	// We want to shoot to where our view/camera is aiming.
-	// To get our player view point from here, we need to access this weapon's owner's controller.
-	// First we get the pawn.
-	OwnerPawn = Cast<APawn>(GetOwner());
-	if (!OwnerPawn) return;
-	// Then from the pawn we can get the controller.
-	OwnerController = OwnerPawn->GetController();
-	if (!OwnerController) return;
-	// Then from the controller we can get the viewpoint.
-	OwnerController->GetPlayerViewPoint(OUT StartLocation, OUT StartRotation);
-
-	if (bToggleSelfRicochet) {
-		// TODO: Disable gravity on player while bouncing around.
-		// TODO: Add impulse for extra disorientation.
-	}
-
-	// Direction that points from the rotation.
-	// We'll make this our first direction.
-	RicochetDirection = StartRotation.Vector();
-
-	// Start the ricochets.
+	PlayAttackSound();
+	SpawnAttackParticleFX();
+	GetAttackStartValues();
 	BounceImpact(StartLocation, RicochetDirection);
 }
 
 // -------------------------------------
-/// Line trace to hit target.\n
-/// Ricochet emitter rotation across hit surface.\n
+/// Line trace to hit target. Ricochet emitter rotation across hit surface.\n
 ///	Update StartDirection and RicochetDirection. \n
 ///	Recursively call itself again via TimerHandle to do next bounce.
 void AWeapon::BounceImpact(FVector Start, FVector Direction)
@@ -131,9 +97,7 @@ void AWeapon::BounceImpact(FVector Start, FVector Direction)
 void AWeapon::DoDamage(FHitResult Hit, FVector Direction)
 {
 	AActor* HitActor = Hit.GetActor();
-
 	if (HitActor) {
-
 		// "nullptr" is where we could specify a damage type if we make multiple (blunt, piercing, fire, etc).
 		FPointDamageEvent DamageEvent(WeaponDamage, Hit, Direction, nullptr);
 
@@ -151,8 +115,8 @@ void AWeapon::DoDamage(FHitResult Hit, FVector Direction)
 /// Hit results to OutHit. \n\n Return if hit was successful.
 bool AWeapon::BounceLineTrace(const FVector Start, const FVector Direction, FHitResult& OutHit)
 {
-	// Then we travel out in a line from our ViewLocation in our ViewDirection, out to our max range.
-	FVector EndPoint = Start + Direction * MaxBasicAttackRange;
+	// Travel out in a line from our ViewLocation in our ViewDirection, out to our max range.
+	const FVector EndPoint = Start + Direction * MaxBasicAttackRange;
 
 	FCollisionQueryParams HitParameters;
 	// If indicating CollisionQueryParams, make sure we keep trace to complex.
@@ -204,4 +168,56 @@ void AWeapon::DoNextBounceImpact()
 		// TODO: Different sound effect.
 		// TODO: Different Explosion effect.
 	}
+}
+
+// -------------------------------------
+/// Setup parameters for first line trace from player camera to do ricochet attack.
+void AWeapon::GetAttackStartValues()
+{
+	// We want to shoot to where our view/camera is aiming.
+	// To get our player view point from here, we need to access this weapon's owner's controller.
+	// First we get the pawn.
+	OwnerPawn = Cast<APawn>(GetOwner());
+	if (!OwnerPawn)
+		return;
+	// Then from the pawn we can get the controller.
+	OwnerController = OwnerPawn->GetController();
+	if (!OwnerController)
+		return;
+	// Then from the controller we can get the viewpoint.
+	OwnerController->GetPlayerViewPoint(OUT StartLocation, OUT StartRotation);
+
+	if (bToggleSelfRicochet) {
+		// TODO: Disable gravity on player while bouncing around.
+		// TODO: Add impulse for extra disorientation.
+	}
+
+	// Direction that points from the rotation.
+	// We'll make this our first direction.
+	RicochetDirection = StartRotation.Vector();
+}
+
+// -------------------------------------
+void AWeapon::PlayAttackSound()
+{
+	// Attack Sound.
+	UGameplayStatics::PlaySoundAtLocation(
+		GetWorld(),
+		FinalHitExplosionSound,
+		GetActorLocation(),
+		FRotator::ZeroRotator
+		);
+}
+
+// -------------------------------------
+void AWeapon::SpawnAttackParticleFX()
+{
+	UGameplayStatics::SpawnEmitterAttached(
+	WeaponFlash,		        // Emitter.
+	DragonSwordMesh,	        // Component to attach to.
+	TEXT("WeaponFlashSocket"),  // Bone/Socket to attach to.
+	FVector::ZeroVector,		// Relative position.
+	FRotator::ZeroRotator,		// Relative rotation.
+	FVector(0.2, 0.2, 0.2)		// Scale.
+	);
 }
