@@ -8,7 +8,7 @@
 // ----------------------------------------------------------------
 UBTTask_ClearBlackboardValue::UBTTask_ClearBlackboardValue()
 {
-	NodeName = TEXT("Clear Blackboard Value");
+    NodeName = TEXT("Clear Blackboard Value");
 }
 
 // ----------------------------------------------------------------
@@ -16,9 +16,9 @@ UBTTask_ClearBlackboardValue::UBTTask_ClearBlackboardValue()
 // We will get the key selected in the behavior tree for this node, clear its value, then let caller know we succeeded.
 EBTNodeResult::Type UBTTask_ClearBlackboardValue::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	Super::ExecuteTask(OwnerComp, NodeMemory);
+    Super::ExecuteTask(OwnerComp, NodeMemory);
 
-	FName SelectedKey = GetSelectedBlackboardKey();
-	OwnerComp.GetBlackboardComponent()->ClearValue(SelectedKey);
-	return EBTNodeResult::Succeeded;
+    FName SelectedKey = GetSelectedBlackboardKey();
+    OwnerComp.GetBlackboardComponent()->ClearValue(SelectedKey);
+    return EBTNodeResult::Succeeded;
 }

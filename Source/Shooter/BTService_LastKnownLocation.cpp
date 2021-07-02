@@ -10,29 +10,29 @@
 // -------------------------------------
 UBTService_LastKnownLocation::UBTService_LastKnownLocation()
 {
-	NodeName = TEXT("Update Known Player Location if LOS");
+    NodeName = TEXT("Update Known Player Location if LOS");
 }
 
 // -------------------------------------
 void UBTService_LastKnownLocation::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
+    Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
-	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+    APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
-	// Protection from null pointers.
-	if (!Player || !OwnerComp.GetAIOwner()) return;
+    // Protection from null pointers.
+    if (!Player || !OwnerComp.GetAIOwner()) return;
 
-	// Being more verbose here so I can remember what's going on.
-	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
-	FName PlayerLocationKey = GetSelectedBlackboardKey();
+    // Being more verbose here so I can remember what's going on.
+    UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+    FName PlayerLocationKey = GetSelectedBlackboardKey();
 
-	bool CanSeePlayer = OwnerComp.GetAIOwner()->LineOfSightTo(Player);
+    bool CanSeePlayer = OwnerComp.GetAIOwner()->LineOfSightTo(Player);
 
-	if (CanSeePlayer) {
-		BB->SetValueAsObject(PlayerLocationKey, Player);
-	}
-	else {
-		BB->ClearValue(PlayerLocationKey);
-	}
+    if (CanSeePlayer) {
+        BB->SetValueAsObject(PlayerLocationKey, Player);
+    }
+    else {
+        BB->ClearValue(PlayerLocationKey);
+    }
 }

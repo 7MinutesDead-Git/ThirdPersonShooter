@@ -7,24 +7,24 @@
 // -------------------------------------
 UBTService_PlayerLocation::UBTService_PlayerLocation()
 {
-	NodeName = TEXT("Update Player Location");
+    NodeName = TEXT("Update Player Location");
 }
 
 // -------------------------------------
 void UBTService_PlayerLocation::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
+    Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
-	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+    APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
-	// Protection from null pointers.
-	if (!Player || !OwnerComp.GetAIOwner()) return;
+    // Protection from null pointers.
+    if (!Player || !OwnerComp.GetAIOwner()) return;
 
-	// Being more verbose here so I can remember what's going on.
-	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
-	FName PlayerLocationKey = GetSelectedBlackboardKey();
-	FVector PlayerLocation = Player->GetActorLocation();
+    // Being more verbose here so I can remember what's going on.
+    UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+    FName PlayerLocationKey = GetSelectedBlackboardKey();
+    FVector PlayerLocation = Player->GetActorLocation();
 
-	// Set our player location as the current key for this node in the Behavior Tree.
-	BB->SetValueAsVector(PlayerLocationKey, PlayerLocation);
+    // Set our player location as the current key for this node in the Behavior Tree.
+    BB->SetValueAsVector(PlayerLocationKey, PlayerLocation);
 }

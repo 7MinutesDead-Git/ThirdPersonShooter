@@ -10,12 +10,12 @@
 UCLASS()
 class SHOOTER_API ASurvivalGameMode : public AShooterGameModeBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	virtual void PawnKilled(APawn* PawnKilled) override;
+    virtual void PawnKilled(APawn* PawnKilled) override;
 
 private:
-	void EndGame(bool PlayerIsWinner);
+    void EndGame(bool PlayerIsWinner);
 
 };

@@ -4,5 +4,5 @@
 // -------------------------------------
 void AShooterGameModeBase::PawnKilled(APawn* PawnKilled)
 {
-	//...
+    //...
 }

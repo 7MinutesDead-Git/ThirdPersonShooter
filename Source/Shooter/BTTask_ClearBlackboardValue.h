@@ -12,16 +12,16 @@
 UCLASS()
 class SHOOTER_API UBTTask_ClearBlackboardValue : public UBTTask_BlackboardBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	// Constructor.
-	UBTTask_ClearBlackboardValue();
+    // Constructor.
+    UBTTask_ClearBlackboardValue();
 
 protected:
-	/** Starts this task. Should return Succeeded, Failed or InProgress.
-	*  (Use FinishLatentTask() when returning InProgress) \n\n
-	* This function should be considered as const (don't modify state of object) if node is not instanced! */
-	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+    /** Starts this task. Should return Succeeded, Failed or InProgress.
+    *  (Use FinishLatentTask() when returning InProgress) \n\n
+    * This function should be considered as const (don't modify state of object) if node is not instanced! */
+    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 };

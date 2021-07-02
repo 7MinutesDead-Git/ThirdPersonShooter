@@ -14,22 +14,22 @@ class UUserWidget;
 UCLASS()
 class SHOOTER_API AShooterPlayerController : public APlayerController
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	virtual void BeginPlay() override;
-	virtual void GameHasEnded(AActor* EndGameFocus, bool bIsWinner) override;
+    virtual void BeginPlay() override;
+    virtual void GameHasEnded(AActor* EndGameFocus, bool bIsWinner) override;
 
 private:
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UUserWidget> DeathScreenUI;
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UUserWidget> WinSummaryUI;
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UUserWidget> PlayerHUD;
-	UPROPERTY()
-	UUserWidget* HUD;
-	UPROPERTY(EditAnywhere)
-	float RestartDelay = 2;
-	FTimerHandle RestartTimer;
+    UPROPERTY(EditAnywhere)
+    TSubclassOf<UUserWidget> DeathScreenUI;
+    UPROPERTY(EditAnywhere)
+    TSubclassOf<UUserWidget> WinSummaryUI;
+    UPROPERTY(EditAnywhere)
+    TSubclassOf<UUserWidget> PlayerHUD;
+    UPROPERTY()
+    UUserWidget* HUD;
+    UPROPERTY(EditAnywhere)
+    float RestartDelay = 2;
+    FTimerHandle RestartTimer;
 };

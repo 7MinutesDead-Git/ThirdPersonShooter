@@ -10,12 +10,12 @@
 UCLASS()
 class SHOOTER_API UBTService_LastKnownLocation : public UBTService_BlackboardBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	UBTService_LastKnownLocation();
+    UBTService_LastKnownLocation();
 
 protected:
-	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+    virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
 };
