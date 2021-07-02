@@ -1,8 +1,8 @@
 // * bool IsWinner covers all four scenarios.
-//        If this is the player (true), and the player is the winner (true), then this controller IsWinner (true).
-//        If this isn't the player (false), and the player isn't the winner (false), then this controller (AI) IsWinner (true).
-//        If this isn't the player (false), and the player is the winner (true), then this controller (AI) is not the winner (false).
-//        If this is our player (true), but the player isn't the winner (false), then this controller (player) is not the winner (false).
+//    If this is the player (true), and the player is the winner (true), then this controller IsWinner (true).
+//    If this isn't the player (false), and the player isn't the winner (false), then this controller (AI) IsWinner (true).
+//    If this isn't the player (false), and the player is the winner (true), then this controller (AI) is not the winner (false).
+//    If this is our player (true), but the player isn't the winner (false), then this controller (player) is not the winner (false).
 
 
 #include "SurvivalGameMode.h"

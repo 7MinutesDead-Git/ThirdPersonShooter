@@ -159,10 +159,10 @@ void AShooterCharacter::SpawnMovementParticles(const FVector Direction, const fl
 
     // Play dash particle on ourselves...
     UGameplayStatics::SpawnEmitterAttached(
-        DashParticleEffect,              // Particle to spawn.
-        GetMesh(),                        // Attach to our mesh.
-        NAME_None,                       // Bone name to attach to.
-        LocationOffset,                  // Relative Location.
+        DashParticleEffect,           // Particle to spawn.
+        GetMesh(),                    // Attach to our mesh.
+        NAME_None,                    // Bone name to attach to.
+        LocationOffset,               // Relative Location.
         DashParticleAttachedRotation, // Relative Rotation.
         DashParticleEffectScale,      // Scale.
         EAttachLocation::SnapToTarget // Type of Location offset.
@@ -170,10 +170,10 @@ void AShooterCharacter::SpawnMovementParticles(const FVector Direction, const fl
 
     // And where we just were.
     UGameplayStatics::SpawnEmitterAtLocation(
-        GetWorld(),                             // World Context.
-        DashParticleEffect,                     // Particle emitter.
+        GetWorld(),                          // World Context.
+        DashParticleEffect,                  // Particle emitter.
         GetActorLocation() + LocationOffset, // Spawn at this location.
-        DashParticleRotation                  // Rotate the effect to face towards our velocity.
+        DashParticleRotation                 // Rotate the effect to face towards our velocity.
         );
 }
 

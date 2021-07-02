@@ -102,7 +102,7 @@ void AWeapon::DoDamage(FHitResult Hit, FVector Direction)
         FPointDamageEvent DamageEvent(WeaponDamage, Hit, Direction, nullptr);
 
         HitActor->TakeDamage(
-            WeaponDamage,     // Amount of damage.
+            WeaponDamage,    // Amount of damage.
             DamageEvent,     // Damage event we made.
             OwnerController, // Who instigated the damage (the controller who attacked with this Weapon).
             this             // What did the damage (this Weapon).
@@ -126,11 +126,11 @@ bool AWeapon::BounceLineTrace(const FVector Start, const FVector Direction, FHit
     HitParameters.AddIgnoredActor(GetOwner());
 
     bool Hit = GetWorld()->LineTraceSingleByChannel(
-        OUT OutHit,               // Out hit info.
-        Start,                   // Start.
-        EndPoint,               // End.
+        OUT OutHit,            // Out hit info.
+        Start,                 // Start.
+        EndPoint,              // End.
         ECC_GameTraceChannel1, // Our "Bullet" channel is here, as shown in Config/DefaultEngine.ini
-        HitParameters           // Collision Parameters (make sure we don't shoot ourselves).
+        HitParameters          // Collision Parameters (make sure we don't shoot ourselves).
         );
 
     return Hit;
@@ -213,11 +213,11 @@ void AWeapon::PlayAttackSound()
 void AWeapon::SpawnAttackParticleFX()
 {
     UGameplayStatics::SpawnEmitterAttached(
-    WeaponFlash,                // Emitter.
-    DragonSwordMesh,            // Component to attach to.
-    TEXT("WeaponFlashSocket"),  // Bone/Socket to attach to.
-    FVector::ZeroVector,        // Relative position.
-    FRotator::ZeroRotator,        // Relative rotation.
-    FVector(0.2, 0.2, 0.2)        // Scale.
+    WeaponFlash,               // Emitter.
+    DragonSwordMesh,           // Component to attach to.
+    TEXT("WeaponFlashSocket"), // Bone/Socket to attach to.
+    FVector::ZeroVector,       // Relative position.
+    FRotator::ZeroRotator,     // Relative rotation.
+    FVector(0.2, 0.2, 0.2)     // Scale.
     );
 }
